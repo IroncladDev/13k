@@ -1,12 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>JS13K TS</title>
-    <link rel="stylesheet" href="style.css"/>
+    <style>
+        #c2d {
+            width: min(100vw, calc(100vh * 16 / 9));
+            position: absolute;
+            /* image-rendering: pixelated; */
+        }
+
+        html,
+        body {
+            margin: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+    </style>
 </head>
 <html>
+
 <body>
     <canvas id="c2d" width="1920" height="1080"></canvas>
     <script type="module" src="/src/index.ts"></script>
 </body>
+
 </html>
