@@ -13,6 +13,9 @@
         devShells = {
           default = pkgs.mkShell {
             nativeBuildInputs = [ pkgs.bun pkgs.zulu ];
+            shellHook = ''
+              exec zsh
+            '';
           };
         };
       });

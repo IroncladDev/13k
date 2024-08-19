@@ -1,32 +1,60 @@
-import { drawEngine } from "./core/draw-engine"
-import { menuState } from "./game-states/menu.state"
-import { createGameStateMachine, gameStateMachine } from "./game-state-machine"
-import { controls } from "@/core/controls"
+import Controls from "./controls"
+import Game from "./game"
+import { canvas } from "./graphics/index"
+import { Block } from "./objects/block"
+import { player } from "./objects/player"
+import { zzfx } from "./utils/zzfx"
 
-createGameStateMachine(menuState)
-
-let previousTime = 0
 const interval = 1000 / 60
+let previousTime = 0
+let frameCount = 0
 
+// Initialize controls
+Controls.init()
+
+Game.entities.push(player)
+Game.blocks.push(
+    new Block("0", 0, 100),
+    new Block("0", 100, 100),
+    new Block("0", 300, 150),
+)
+
+// Game loop
 ;(function draw(currentTime: number) {
     const delta = currentTime - previousTime
 
+    // Redraw frame at 60fps
     if (delta >= interval) {
         previousTime = currentTime - (delta % interval)
+        frameCount++
 
-        controls.queryController()
-        drawEngine.context.clearRect(
-            0,
-            0,
-            drawEngine.canvasWidth,
-            drawEngine.canvasHeight,
-        )
-        // Although the game is currently set at 60fps, the state machine accepts a time passed to onUpdate
-        // If you'd like to unlock the framerate, you can instead use an interval passed to onUpdate to
-        // adjust your physics so they are consistent across all frame rates.
-        // If you do not limit your fps or account for the interval your game will be far too fast or far too
-        // slow for anyone with a different refresh rate than you.
-        gameStateMachine.getState().onUpdate(delta)
+        canvas
+            .fillStyle("rgb(25, 25, 25)")
+            .fillRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
+
+        for (let entity of Game.entities) {
+            entity.moveX()
+            entity.render()
+        }
+        for (let block of Game.blocks) {
+            block.render()
+            block.collideX()
+        }
+        for (let entity of Game.entities) {
+            entity.moveY()
+        }
+        for (let block of Game.blocks) {
+            block.collideY()
+        }
+
+        if (Controls.clicked) {
+            Controls.clicked = false
+        }
+
+        if (frameCount % 200 === 0) {
+            // zzfx(...[, , 925, 0.04, 0.3, 0.6, 1, 0.3, , 6.27, -184, 0.09, 0.17])
+        }
     }
+
     requestAnimationFrame(draw)
 })(0)

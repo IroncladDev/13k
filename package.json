@@ -1,6 +1,7 @@
 {
   "name": "typescript-template",
   "version": "1.0.0",
+  "author": "Rob Louie",
   "main": "index.js",
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.5.0",
@@ -10,7 +11,7 @@
     "clean-css": "^5.3.1",
     "copy-webpack-plugin": "^9.0.1",
     "cross-env": "^7.0.3",
-    "ect-bin": "1.4.1",
+    "ect-bin": "^1.4.1",
     "eslint": "^8.34.0",
     "eslint-plugin-unused-imports": "^2.0.0",
     "google-closure-compiler": "^20230206.0.0",
@@ -36,5 +37,7 @@
     "tsc": "tsc --watch --noEmit",
     "format": "prettier --write \"src/**/*.ts\""
   },
-  "author": "Rob Louie"
+  "trustedDependencies": [
+    "ect-bin"
+  ]
 }
