@@ -1,5 +1,4 @@
 import { CanvasPath } from "./path"
-import { CanvasText } from "./text"
 
 export type CtxValue<T extends keyof CanvasRenderingContext2D> =
     CanvasRenderingContext2D[T]
@@ -10,17 +9,25 @@ export type CtxParams<T extends keyof CanvasRenderingContext2D> = Parameters<
 
 export class CanvasEngine {
     context: CanvasRenderingContext2D
+    dpr: number
 
     constructor(canvas: HTMLCanvasElement) {
-        this.context = canvas.getContext("2d", { alpha: false }) as CanvasRenderingContext2D
+        this.context = canvas.getContext("2d") as CanvasRenderingContext2D
+        // might change later
+        this.dpr = 4 // window.devicePixelRatio || 1
+
+        canvas.width = this.context.canvas.width * this.dpr
+        canvas.height = this.context.canvas.height * this.dpr
+
+        this.context.scale(this.dpr, this.dpr)
     }
 
     get canvasWidth() {
-        return this.context.canvas.width
+        return this.context.canvas.width / this.dpr
     }
 
     get canvasHeight() {
-        return this.context.canvas.height
+        return this.context.canvas.height / this.dpr
     }
 
     // Rectangles
@@ -36,26 +43,22 @@ export class CanvasEngine {
         this.context.clearRect(...args)
         return this
     }
-
-    // Paths
-    path() {
-        return new CanvasPath(this.context)
-    }
-    drawPath(callback: (path: CanvasPath) => void) {
-        const path = this.path()
-        path.beginPath()
-        callback(path)
-        path.close()
+    roundFillRect(...args: CtxParams<"roundRect">) {
+        this.context.beginPath()
+        this.context["roundRect"](...args)
+        this.context.fill()
+        this.context.closePath()
         return this
     }
 
-    // Text
-    text() {
-        return new CanvasText(this.context)
+    // Paths
+    path() {
+        return new CanvasPath(this)
     }
-    drawText(callback: (text: CanvasText) => void) {
-        const text = this.text()
-        callback(text)
+
+    // Images
+    drawImage(...args: CtxParams<"drawImage">) {
+        this.context.drawImage(...args)
         return this
     }
 
@@ -102,22 +105,16 @@ export class CanvasEngine {
         this.context.restore()
         return this
     }
-    scaled(...args: CtxParams<"scale">) {
+    scale(...args: CtxParams<"scale">) {
         this.context.scale(...args)
         return this
     }
-    translated(...args: CtxParams<"translate">) {
+    translate(...args: CtxParams<"translate">) {
         this.context.translate(...args)
         return this
     }
-    rotated(...args: CtxParams<"rotate">) {
+    rotate(...args: CtxParams<"rotate">) {
         this.context.rotate(...args)
-        return this
-    }
-    pushpop(callback: (ctx: CanvasEngine) => void) {
-        this.context.save()
-        callback(this)
-        this.context.restore()
         return this
     }
 

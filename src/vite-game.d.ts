@@ -1,1 +1,1 @@
-declare const c2d, frameCount: number 
+declare const c2d 

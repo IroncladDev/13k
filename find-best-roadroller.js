@@ -37,12 +37,12 @@ rl.question(
                         .split("\n")
                         .reverse()
                         .find(line => line.includes("<-"))
-                    const itemCheckRemoved = bestConfigConsole.split(") ")[1]
-                    const endSizeRemoved = itemCheckRemoved.split(": ")[0]
+                    const itemCheckRemoved = bestConfigConsole?.split(") ")[1]
+                    const endSizeRemoved = itemCheckRemoved?.split(": ")[0]
                     const configPieces = endSizeRemoved
-                        .split(" ")
+                        ?.split(" ")
                         .filter(param => !param.startsWith("-Sx"))
-                    configPieces.forEach(singleParam => {
+                    configPieces?.forEach(singleParam => {
                         cliToApiMaps.forEach(mapper => {
                             if (
                                 singleParam.startsWith(mapper.cli) &&

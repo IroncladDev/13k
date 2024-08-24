@@ -1,0 +1,58 @@
+import { CanvasEngine, CtxParams } from "./index"
+
+export class CanvasPath {
+    engine: CanvasEngine
+    constructor(engine: CanvasEngine) {
+        this.engine = engine
+    }
+
+    beginPath() {
+        this.engine.context.beginPath()
+        return this
+    }
+
+    moveTo(...args: CtxParams<"moveTo">) {
+        this.engine.context.moveTo(...args)
+        return this
+    }
+
+    lineTo(...args: CtxParams<"lineTo">) {
+        this.engine.context.lineTo(...args)
+        return this
+    }
+
+    arcTo(...args: CtxParams<"arcTo">) {
+        this.engine.context.arcTo(...args)
+        return this
+    }
+
+    roundRect(...args: CtxParams<"roundRect">) {
+        this.engine.context['roundRect'](...args)
+        return this
+    }
+
+    arc(...args: CtxParams<"arc">) {
+        this.engine.context.arc(...args)
+        return this
+    }
+
+    ellipse(...args: CtxParams<"ellipse">) {
+        this.engine.context.ellipse(...args)
+        return this
+    }
+
+    fill() {
+        this.engine.context.fill()
+        return this
+    }
+
+    stroke() {
+        this.engine.context.stroke()
+        return this
+    }
+
+    close() {
+        this.engine.context.closePath()
+        return this.engine
+    }
+}

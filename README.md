@@ -54,16 +54,16 @@ You play as an El Salvadorian soldier, on a mission to take down the MS-13 gangs
     - [x] Game loop
     - [x] Drawing methods (rect, circle, text, etc)
     - [x] Input
-    - [ ] Sound (?)
+    - [x] Sound
 - [ ] Base gameplay
     - [ ] Environment
         - [ ] Rooms
         - [ ] Doors
         - [ ] Walls
-        - [ ] Level Rendering
+        - [x] Level Rendering
     - [ ] Entity
         - [ ] Graphics
-        - [ ] Attacks
+        - [x] Attacks
         - [ ] Movement
         - [x] Collisions
         - [ ] Bullet collisions
@@ -105,4 +105,5 @@ You play as an El Salvadorian soldier, on a mission to take down the MS-13 gangs
 
 ## Misc ideas
 
-PTSD whenever you enter a room with a hostage
+- [ ] Reload indicator
+- [ ] Semi and full-auto fire types
