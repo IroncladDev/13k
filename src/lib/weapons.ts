@@ -2,54 +2,148 @@ import { canvas } from "./canvas/index"
 import { sfx } from "./sfx"
 import { constrain } from "./utils"
 
-export type WeaponType = "long" | "rifle" | "smg" | "pistol" | "meelee"
-
-export interface Weapon {
+type GunWeapon = {
+    type: "gun"
     name: string
-    type: WeaponType
-    damage: number
-    recoilY: number
-    recoilX: number
-    lifetime: number
     reload: number
+    recoilX: number
+    recoilY: number
+    lifetime: number
+    damage: number
+    bulletSpeed: number
     barrelX: number
     barrelY: number
-    bulletSpeed: number
     weight: number
     fireMode: "semi" | "auto"
     frameDelay: number
     sound?: keyof typeof sfx
 
-    draw(frame: number, armColor?: string): void
+    render(frame: number, armColor?: string, armWidth?: number): void
 }
 
+type MeeleeWeapon = {
+    type: "meelee"
+    name: string
+    reload: number
+    range: number
+    frameDelay: number
+    damage: number
+    knockback: number
+    sound?: keyof typeof sfx
+
+    render(frame: number, armColor?: string, armWidth?: number): void
+}
+
+export type Weapon = GunWeapon | MeeleeWeapon
+
+// TODO: need a shotgun and some sort of superweapon for leader. Need one more rifle and smg
 export const weapons: Record<string, Weapon> = {
+    ["machete"]: {
+        type: "meelee",
+        name: "Machete",
+        reload: 10,
+        frameDelay: 5,
+        range: 100,
+        damage: 5,
+        knockback: 7,
+        sound: "whoosh1",
+
+        render(frame, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            const frameBounce = (Math.sin(constrain(frame, 0, 0.5) * 2 * Math.PI) + 1) / 2
+            canvas
+                .push()
+                .translate(0, 0)
+                .rotate(frameBounce * Math.PI - Math.PI / 1.5)
+                .translate(17.5, 2.5)
+                .fillStyle("black")
+                .push()
+                .translate(7.5, 5)
+                .rotate((Math.PI * frameBounce) / 2)
+                .path()
+                .roundRect(0, 0, 5, 15, 2)
+                .roundRect(0, 10, 7, 5, 2)
+                .roundRect(0, -45, 8, 50, [2, 5, 2, 2])
+                .fill()
+                .close()
+                .pop()
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .path()
+                .arc(0, 0, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+        },
+    },
+    ["karambit"]: {
+        type: "meelee",
+        name: "Karambit",
+        reload: 25,
+        frameDelay: 10,
+        range: 75,
+        damage: 5,
+        knockback: 5,
+        sound: "whoosh1",
+
+        render(frame, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            const frameBounce = (Math.sin(constrain(frame, 0, 0.5) * 2 * Math.PI) + 1) / 2
+            canvas
+                .push()
+                .translate(0, 0)
+                .rotate(frameBounce * Math.PI - Math.PI / 1.5)
+                .translate(17.5, 2.5)
+                .strokeStyle("black")
+                .lineWidth(2)
+                .lineCap("square")
+                .push()
+                .translate(12, 5 + frameBounce * 5)
+                .rotate(Math.PI * frameBounce * 4)
+                .path()
+                .ellipse(0, 0, 3, 3, 0, 0, Math.PI * 2)
+                .stroke()
+                .close()
+                .lineWidth(4)
+                .path()
+                .arc(9, 5, 10, Math.PI / 2, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .path()
+                .arc(0, 0, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+        },
+    },
     ["ar15"]: {
         name: "AR-15",
-        type: "long",
         reload: 6,
         recoilX: 1,
         recoilY: 3,
         lifetime: 50,
-        damage: 10,
+        damage: 2,
         bulletSpeed: 30,
         barrelX: 70,
-        barrelY: -2.5,
+        barrelY: -4,
         weight: 2,
         fireMode: "auto",
         sound: "shoot2",
         frameDelay: 1,
+        type: "gun",
 
-        draw(_: number, armColor: string = "rgb(35, 80, 10)") {
+        render(_: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(2, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -57,7 +151,6 @@ export const weapons: Record<string, Weapon> = {
                 // Gun body
                 .fillStyle("black")
                 .path()
-                .beginPath()
                 .roundRect(5, 2.5, 15, 15, [2, 0, 10, 2])
                 .roundRect(5, 2.5, 40, 5, 2)
                 .roundRect(25, 2.5, 20, 10, 2)
@@ -71,37 +164,35 @@ export const weapons: Record<string, Weapon> = {
                 .close()
                 // Arm in front
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
         },
     },
-    ["1911"]: {
-        name: "1911",
-        type: "pistol",
+    ["glock"]: {
+        name: "Glock",
         reload: 5,
         recoilX: 0,
-        recoilY: 6,
-        lifetime: 40,
-        damage: 4,
-        bulletSpeed: 30,
+        recoilY: 5,
+        lifetime: 30,
+        damage: 1,
+        bulletSpeed: 20,
         barrelX: 50,
-        barrelY: -15,
+        barrelY: -11,
         weight: 0,
         fireMode: "semi",
-        frameDelay: 1,
+        frameDelay: 3,
+        type: "gun",
 
-        draw(frame: number, armColor: string = "rgb(35, 80, 10)") {
+        render(frame: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(1.5, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
                 .stroke()
                 .close()
@@ -114,49 +205,45 @@ export const weapons: Record<string, Weapon> = {
                 .roundFillRect(0, 0, 7.5, 20, 2)
                 .pop()
                 .path()
-                .beginPath()
-                .roundRect(35 - frame * 15, 0, 30, 7.5, [5, 3, 2, 2])
-                .roundRect(32.5, 5, 10, 2, 2)
-                .roundRect(40, 2, 25, 4, 1)
-                .roundRect(42.5, 2.5, 10, 10, [2, 2, 5, 2])
+                .roundRect(35 - frame * 15, 0, 30, 7.5, 2)
+                .roundRect(35, 1, 30, 4, 1)
+                .roundRect(42.5, 2.5, 10, 10, 2)
                 .fill()
                 .close()
                 // Arm in front
                 .push()
                 .scale(1.25, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
                 .stroke()
                 .close()
                 .pop()
         },
     },
-    ["glock"]: {
+    ["autoglock"]: {
         name: "Full-auto Glock",
-        type: "pistol",
         reload: 3,
         recoilX: 0,
         recoilY: 5,
         lifetime: 30,
-        damage: 2,
+        damage: 1,
         bulletSpeed: 20,
         barrelX: 50,
-        barrelY: -15,
+        barrelY: -10,
         weight: 0,
         fireMode: "auto",
         frameDelay: 3,
+        type: "gun",
 
-        draw(frame: number, armColor: string = "rgb(35, 80, 10)") {
+        render(frame: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(1.5, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
                 .stroke()
                 .close()
@@ -171,7 +258,6 @@ export const weapons: Record<string, Weapon> = {
                 .roundFillRect(1, 35, 6, 5, 2)
                 .pop()
                 .path()
-                .beginPath()
                 .roundRect(35 - frame * 15, 0, 30, 7.5, 2)
                 .roundRect(35, 1, 30, 4, 1)
                 .roundRect(42.5, 2.5, 10, 10, 2)
@@ -181,7 +267,6 @@ export const weapons: Record<string, Weapon> = {
                 .push()
                 .scale(1.25, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
                 .stroke()
                 .close()
@@ -190,12 +275,11 @@ export const weapons: Record<string, Weapon> = {
     },
     ["ak47"]: {
         name: "AK-47",
-        type: "rifle",
         reload: 9,
         recoilX: 1,
         recoilY: 5,
         lifetime: 30,
-        damage: 15,
+        damage: 2.5,
         bulletSpeed: 25,
         barrelX: 80,
         barrelY: -5,
@@ -203,17 +287,17 @@ export const weapons: Record<string, Weapon> = {
         fireMode: "auto",
         sound: "shoot2",
         frameDelay: 1,
+        type: "gun",
 
-        draw(_: number, armColor: string = "rgb(35, 80, 10)") {
+        render(_: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(2, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -221,7 +305,6 @@ export const weapons: Record<string, Weapon> = {
                 // Gun body
                 .fillStyle("black")
                 .path()
-                .beginPath()
                 .roundRect(5, 2.5, 5, 15, [2, 0, 10, 2])
                 .roundRect(5, 7.5, 40, 5, 2)
                 .roundRect(25, 2.5, 40, 10, 5)
@@ -238,7 +321,6 @@ export const weapons: Record<string, Weapon> = {
                 .lineWidth(10)
                 .lineCap("square")
                 .path()
-                .beginPath()
                 .arc(65, 10, 20, Math.PI / 1.5, Math.PI)
                 .stroke()
                 .close()
@@ -247,7 +329,6 @@ export const weapons: Record<string, Weapon> = {
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -255,29 +336,28 @@ export const weapons: Record<string, Weapon> = {
     },
     ["mp5"]: {
         name: "MP5",
-        type: "smg",
         reload: 3,
         recoilX: 0,
         recoilY: 5,
         lifetime: 20,
-        damage: 5,
+        damage: 1,
         bulletSpeed: 20,
         barrelX: 50,
-        barrelY: -10,
+        barrelY: -9,
         weight: 1,
         fireMode: "auto",
         frameDelay: 1,
+        type: "gun",
 
-        draw(_: number, armColor: string = "rgb(35, 80, 10)") {
+        render(_: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(1.5, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -285,7 +365,6 @@ export const weapons: Record<string, Weapon> = {
                 // Gun body
                 .fillStyle("black")
                 .path()
-                .beginPath()
                 .roundRect(10, 2.5, 5, 10, [2, 0, 10, 2])
                 .roundRect(10, 2.5, 30, 5, 2)
                 .roundRect(20, 0, 20, 8, [5, 2, 2, 2])
@@ -300,7 +379,6 @@ export const weapons: Record<string, Weapon> = {
                 .translate(25, 10)
                 .rotate(Math.PI / 12)
                 .path()
-                .beginPath()
                 .roundRect(0, 0, 5, 10, 2)
                 .fill()
                 .close()
@@ -309,7 +387,6 @@ export const weapons: Record<string, Weapon> = {
                 .translate(35, 5)
                 .rotate(-Math.PI / 16)
                 .path()
-                .beginPath()
                 .roundRect(0, 0, 20, 7.5, 2)
                 .fill()
                 .close()
@@ -319,7 +396,6 @@ export const weapons: Record<string, Weapon> = {
                 .lineWidth(5)
                 .lineCap("square")
                 .path()
-                .beginPath()
                 .arc(62.5, 10, 20, Math.PI / 1.5, Math.PI)
                 .stroke()
                 .close()
@@ -328,7 +404,6 @@ export const weapons: Record<string, Weapon> = {
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -336,29 +411,28 @@ export const weapons: Record<string, Weapon> = {
     },
     ["uzi"]: {
         name: "Uzi",
-        type: "smg",
         reload: 2,
         recoilX: 0.1,
         recoilY: 3,
         lifetime: 20,
-        damage: 2,
+        damage: 0.75,
         bulletSpeed: 20,
         barrelX: 50,
         barrelY: -10,
         weight: 0.5,
         fireMode: "auto",
         frameDelay: 1,
+        type: "gun",
 
-        draw(_: number, armColor: string = "rgb(35, 80, 10)") {
+        render(_: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(1.7, 1)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -366,7 +440,6 @@ export const weapons: Record<string, Weapon> = {
                 // Gun body
                 .fillStyle("black")
                 .path()
-                .beginPath()
                 .roundRect(5, 2.5, 2.5, 10, 2)
                 .roundRect(5, 2.5, 25, 2.5, 2)
                 .roundRect(25, 0, 30, 10, 2)
@@ -383,7 +456,6 @@ export const weapons: Record<string, Weapon> = {
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
-                .beginPath()
                 .arc(17.5, 5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -391,12 +463,11 @@ export const weapons: Record<string, Weapon> = {
     },
     ["m24"]: {
         name: "M24 SWS",
-        type: "long",
         reload: 75,
         recoilX: 5,
         recoilY: 10,
         lifetime: 100,
-        damage: 20,
+        damage: 10,
         bulletSpeed: 50,
         barrelX: 100,
         barrelY: -10,
@@ -404,19 +475,19 @@ export const weapons: Record<string, Weapon> = {
         fireMode: "semi",
         frameDelay: 15,
         sound: "shoot3",
+        type: "gun",
 
-        draw(frame: number, armColor: string = "rgb(35, 80, 10)") {
-            let frameBounce = (Math.sin((constrain(frame, 0, 0.5) * 2) * Math.PI) + 1) / 2
+        render(frame: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            const frameBounce = (Math.sin(constrain(frame, 0, 0.5) * 2 * Math.PI) + 1) / 2
 
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
                 .scale(1.8, 0.8)
                 .path()
-                .beginPath()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
                 .stroke()
                 .close()
@@ -424,7 +495,6 @@ export const weapons: Record<string, Weapon> = {
                 // Gun body
                 .fillStyle("black")
                 .path()
-                .beginPath()
                 .roundRect(5, 2.5, 15, 12.5, [2, 2, 5, 2])
                 .roundRect(10, 2.5, 15, 10, [2, 2, 5, 2])
                 .roundRect(20, 2.5, 15, 7.5, [2, 2, 5, 2])
@@ -442,14 +512,13 @@ export const weapons: Record<string, Weapon> = {
                 .close()
                 // Arm in front
                 .strokeStyle(armColor)
-                .lineWidth(5)
+                .lineWidth(armWidth)
                 .lineCap("round")
                 .push()
-                .translate(25 - (frameBounce * 15), 5)
+                .translate(25 - frameBounce * 15, 5)
                 .scale(1, 1)
                 .path()
-                .beginPath()
-                .arc(0, 0, 20 - (frameBounce * 12.5), Math.PI / 4 - (Math.PI / 3 * frameBounce), Math.PI)
+                .arc(0, 0, 20 - frameBounce * 12.5, Math.PI / 4 - (Math.PI / 3) * frameBounce, Math.PI)
                 .stroke()
                 .close()
                 .pop()

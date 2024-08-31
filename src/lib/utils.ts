@@ -9,13 +9,8 @@ export const rectCollision = (
     h2: number,
 ) => x + w > x2 && x < x2 + w2 && y + h > y2 && y < y2 + h2
 
-export const pointRectCollision = (
-    px: number,
-    py: number,
-    x: number,
-    y: number,
-    w: number, h: number,
-) => px > x && px < x + w && py > y && py < y + h
+export const pointRectCollision = (px: number, py: number, x: number, y: number, w: number, h: number) =>
+    px > x && px < x + w && py > y && py < y + h
 
 export const lineLineCollision = (
     x1: number,
@@ -27,12 +22,8 @@ export const lineLineCollision = (
     x4: number,
     y4: number,
 ): { colliding: true; x: number; y: number } | { colliding: false } => {
-    const uA =
-        ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) /
-        ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
-    const uB =
-        ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) /
-        ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
+    const uA = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
+    const uB = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
 
     if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1) {
         const intersectionX = x1 + uA * (x2 - x1)
@@ -53,23 +44,17 @@ export const lineRectCollision = (
     y: number,
     w: number,
     h: number,
-):
-    | { colliding: true; points: Array<[number, number]> }
-    | { colliding: false } => {
-    let pointOneCollision = pointRectCollision(x1, y1, x, y, w, h)
-    let pointTwoCollision = pointRectCollision(x2, y2, x, y, w, h)
+): { colliding: true; points: Array<[number, number]> } | { colliding: false } => {
+    const pointOneCollision = pointRectCollision(x1, y1, x, y, w, h)
+    const pointTwoCollision = pointRectCollision(x2, y2, x, y, w, h)
 
     const checks = [
         lineLineCollision(x1, y1, x2, y2, x, y, x + w, y),
         lineLineCollision(x1, y1, x2, y2, x, y + h, x + w, y + h),
         lineLineCollision(x1, y1, x2, y2, x, y, x, y + h),
         lineLineCollision(x1, y1, x2, y2, x + w, y, x + w, y + h),
-        pointOneCollision
-            ? { colliding: true, x: x1, y: y1 }
-            : { colliding: false },
-        pointTwoCollision
-            ? { colliding: true, x: x2, y: y2 }
-            : { colliding: false },
+        pointOneCollision ? { colliding: true, x: x1, y: y1 } : { colliding: false },
+        pointTwoCollision ? { colliding: true, x: x2, y: y2 } : { colliding: false },
     ]
 
     if (checks.some(c => c.colliding)) {
@@ -88,21 +73,16 @@ export const lineRectCollision = (
     return { colliding: false }
 }
 
-export const pointFromAngle = (
-    x: number,
-    y: number,
-    angle: number,
-    distance: number,
-) => [x + distance * Math.cos(angle), y + distance * Math.sin(angle)]
+export const pointFromAngle = (x: number, y: number, angle: number, distance: number): [number, number] => [
+    x + distance * Math.cos(angle),
+    y + distance * Math.sin(angle),
+]
 
-export const constrain = (value: number, min: number, max: number) =>
-    Math.min(Math.max(value, min), max)
+export const constrain = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
-export const dist = (x1: number, y1: number, x2: number, y2: number) =>
-    Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+export const dist = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-export const angleTo = (x1: number, y1: number, x2: number, y2: number) =>
-    Math.atan2(y2 - y1, x2 - x1)
+export const angleTo = (x1: number, y1: number, x2: number, y2: number) => Math.atan2(y2 - y1, x2 - x1)
 
 export function circleRect(
     cx: number,
@@ -140,50 +120,28 @@ export function circleRect(
             // Left edge intersection
             const y = cy + Math.sqrt(radius * radius - (cx - rx) * (cx - rx))
             points.push([rx, y])
-            points.push([
-                rx,
-                cy - Math.sqrt(radius * radius - (cx - rx) * (cx - rx)),
-            ])
+            points.push([rx, cy - Math.sqrt(radius * radius - (cx - rx) * (cx - rx))])
         }
 
         if (cx - radius <= rx + rw && cx + radius >= rx + rw) {
             // Right edge intersection
-            const y =
-                cy +
-                Math.sqrt(radius * radius - (cx - (rx + rw)) * (cx - (rx + rw)))
+            const y = cy + Math.sqrt(radius * radius - (cx - (rx + rw)) * (cx - (rx + rw)))
             points.push([rx + rw, y])
-            points.push([
-                rx + rw,
-                cy -
-                    Math.sqrt(
-                        radius * radius - (cx - (rx + rw)) * (cx - (rx + rw)),
-                    ),
-            ])
+            points.push([rx + rw, cy - Math.sqrt(radius * radius - (cx - (rx + rw)) * (cx - (rx + rw)))])
         }
 
         if (cy - radius <= ry && cy + radius >= ry) {
             // Top edge intersection
             const x = cx + Math.sqrt(radius * radius - (cy - ry) * (cy - ry))
             points.push([x, ry])
-            points.push([
-                cx - Math.sqrt(radius * radius - (cy - ry) * (cy - ry)),
-                ry,
-            ])
+            points.push([cx - Math.sqrt(radius * radius - (cy - ry) * (cy - ry)), ry])
         }
 
         if (cy - radius <= ry + rh && cy + radius >= ry + rh) {
             // Bottom edge intersection
-            const x =
-                cx +
-                Math.sqrt(radius * radius - (cy - (ry + rh)) * (cy - (ry + rh)))
+            const x = cx + Math.sqrt(radius * radius - (cy - (ry + rh)) * (cy - (ry + rh)))
             points.push([x, ry + rh])
-            points.push([
-                cx -
-                    Math.sqrt(
-                        radius * radius - (cy - (ry + rh)) * (cy - (ry + rh)),
-                    ),
-                ry + rh,
-            ])
+            points.push([cx - Math.sqrt(radius * radius - (cy - (ry + rh)) * (cy - (ry + rh))), ry + rh])
         }
 
         return { colliding: true, points }

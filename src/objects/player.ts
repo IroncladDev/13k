@@ -1,24 +1,130 @@
 import Controls from "@/lib/controls"
 import Game from "@/lib/game"
 import { canvas } from "@/lib/canvas/index"
-import { angleTo, constrain, pointFromAngle } from "@/lib/utils"
+import { angleTo, constrain, dist, pointFromAngle } from "@/lib/utils"
 import { sfx } from "@/lib/sfx"
 import { zzfx } from "@/lib/zzfx"
-import { Bullet } from "./bullet"
 import { Entity } from "./entity"
 import { WeaponKey } from "@/lib/weapons"
+import { levels } from "@/lib/levels"
+import { Enemy } from "./enemy"
 
 export class Player extends Entity {
-    mouseRotation: number = 0
-    hasFired: boolean = false
+    mouseRotation = 0
+    hasFired = false
+    health = {
+        head: 14,
+        body: 30,
+        legs: 15,
+    }
+    maxHealth = {
+        head: 15,
+        body: 30,
+        legs: 15,
+    }
 
     constructor(x: number, y: number) {
         super(x, y)
     }
 
+    run() {
+        // Dead & Dying states
+        if (
+            this.y > levels[Game.level].map.length * Game.blockSize ||
+            this.health.head <= 0 ||
+            this.health.body <= 0 ||
+            this.health.legs <= 0
+        ) {
+            this.dead = true
+        }
+
+        // Movement
+        if (Controls.keysDown("ArrowRight", "d", "D")) {
+            this.movingDir = 1
+        } else if (Controls.keysDown("ArrowLeft", "a", "A")) {
+            this.movingDir = -1
+        } else {
+            this.movingDir = 0
+        }
+        if (Controls.keysDown("ArrowUp", "w", "W", " ") && this.canJump) this.jump()
+
+        // Misc weapon switching
+        const weaponKeys: Record<string, WeaponKey> = {
+            "1": "ar15",
+            "2": "glock",
+            "3": "autoglock",
+            "4": "ak47",
+            "5": "mp5",
+            "6": "uzi",
+            "7": "m24",
+            "8": "karambit",
+            "9": "machete",
+        }
+
+        for (const [key, w] of Object.entries(weaponKeys)) {
+            if (Controls.keysDown(key)) {
+                this.weapon = w
+            }
+        }
+
+        // Mouse
+        const mouseX = Controls.mouseX - Game.cameraX
+        const mouseY = Controls.mouseY - Game.cameraY
+
+        if (mouseX > this.centerX) this.dir = 1
+        else if (mouseX < this.centerX) this.dir = -1
+
+        this.mouseRotation = angleTo(this.centerX, this.centerY, mouseX, mouseY) - this.recoilRotation * this.dir
+
+        // Run base behavior functions
+        this.animateVars()
+
+        // Handle bullet collisions
+        this.handleBulletCollisions()
+
+        if (this.fireCooldown > 0) this.fireCooldown--
+
+        // Attacks
+        if (
+            Controls.pressed &&
+            this.fireCooldown === 0 &&
+            (this.wp.type === "meelee" || this.wp.fireMode === "semi" ? !this.hasFired : true)
+        ) {
+            zzfx(...(this.wp.sound ? sfx[this.wp.sound] : sfx["shoot1"]))
+            this.fireFrame = 1
+
+            // Meelee weapons
+            if (this.wp.type === "meelee") {
+                for (const enemy of Game.entities) {
+                    const enemyDist = dist(this.centerX, this.centerY, enemy.centerX, enemy.centerY)
+
+                    if (
+                        ((enemyDist < this.wp.range / 2 &&
+                            (this.dir === 1 ? enemy.centerX > this.centerX : enemy.centerX < this.centerX)) ||
+                            enemyDist < this.wp.range / 4) &&
+                        enemy instanceof Enemy
+                    ) {
+                        enemy.health.body -= this.wp.damage
+                        enemy.hasSeenPlayer = true
+                        enemy.xVel -= this.wp.knockback * enemy.dir
+                        enemy.yVel -= this.wp.knockback
+                    }
+                }
+            } else {
+                // TODO: some sort of alert system for enemies and nearby enemies
+                this.shoot(this.mouseRotation)
+            }
+
+            this.hasFired = true
+        }
+
+        if (Controls.released && this.hasFired) {
+            this.hasFired = false
+        }
+    }
+
     render() {
-        const speedWeightRatio =
-            (this.speed - this.wp.weight) / this.speed
+        const speedWeightRatio = this.wp.type === "meelee" ? 1 : (this.speed - this.wp.weight) / this.speed
 
         canvas
             .push()
@@ -32,14 +138,9 @@ export class Player extends Entity {
             .translate(-2.5 * this.baseScaleTo, -25)
             .scale(this.dir, 1)
             .rotate(
-                this.movingDirTo *
-                    ((Math.sin((Game.frameCount / 5) * speedWeightRatio) *
-                        Math.PI) /
-                        4) +
-                    Math.PI / 4,
+                this.movingDirTo * ((Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
             .path()
-            .beginPath()
             .arc(0, 15, 15, -Math.PI / 2, 0)
             .stroke()
             .close()
@@ -48,14 +149,9 @@ export class Player extends Entity {
             .translate(-2.5 * this.baseScaleTo, -25)
             .scale(this.dir, 1)
             .rotate(
-                this.movingDirTo *
-                    ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) *
-                        Math.PI) /
-                        4) +
-                    Math.PI / 4,
+                this.movingDirTo * ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
             .path()
-            .beginPath()
             .arc(0, 15, 15, -Math.PI / 2, 0)
             .stroke()
             .close()
@@ -66,24 +162,13 @@ export class Player extends Entity {
             .fillStyle("rgb(45, 100, 15)")
             .roundFillRect(10 - 2.5 * this.baseScaleTo, 20, 20, 40, 25)
             .fillStyle("rgb(35, 80, 10)")
-            .roundFillRect(
-                7.5 - 2.5 * this.baseScaleTo,
-                20,
-                25,
-                30,
-                [25, 25, 5, 5],
-            )
+            .roundFillRect(7.5 - 2.5 * this.baseScaleTo, 20, 25, 30, [25, 25, 5, 5])
             // Head
             .fillStyle("#F4DEB3")
             .roundFillRect(12.5, 2.5, 15, 15, 15)
             // Helmet
             .fillStyle("rgb(35, 80, 10)")
-            .roundFillRect(10, 0, 20, 10, [
-                20,
-                20,
-                2.5 + this.baseScaleTo * 2.5,
-                2.5 - this.baseScaleTo * 2.5,
-            ])
+            .roundFillRect(10, 0, 20, 10, [20, 20, 2.5 + this.baseScaleTo * 2.5, 2.5 - this.baseScaleTo * 2.5])
             .roundFillRect(15 - 5 * this.baseScaleTo, 10, 10, 5, [
                 0,
                 0,
@@ -93,122 +178,35 @@ export class Player extends Entity {
             .pop()
             .pop()
 
-        canvas
-            .push()
-            .translate(this.centerX - 2.5 * this.baseScaleTo, this.y + 30 - 2.5)
-            .rotate(this.mouseRotation + (this.dir === -1 ? Math.PI : 0))
-            .scale(this.dir, 1)
-            .rotate(0)
-        this.wp.draw(this.fireFrame, "rgb(25, 60, 5)")
-        canvas.pop()
-    }
-
-    run() {
-        const mouseX = Controls.mouseX - Game.cameraX
-        const mouseY = Controls.mouseY - Game.cameraY
-
-        this.baseRotation += (this.rotateTo - this.baseRotation) / 5
-        this.baseScaleTo += (this.dir - this.baseScaleTo) / 5
-        this.movingDirTo += (this.movingDir - this.movingDirTo) / 5
-        this.mouseRotation =
-            angleTo(this.centerX, this.centerY, mouseX, mouseY) -
-            this.recoilRotation * this.dir
-        this.fireFrame += -this.fireFrame / (this.wp?.frameDelay || 1)
-
-        if (this.fireCooldown > 0) this.fireCooldown--
-
-        if (
-            Controls.pressed &&
-            this.fireCooldown === 0 &&
-            (this.wp.fireMode === "auto" ? true : !this.hasFired)
-        ) {
-            zzfx(...(this.wp.sound ? sfx[this.wp.sound] : sfx["shoot1"]))
-            this.fireFrame = 1
-
-            let [x, y] = pointFromAngle(
+        if (this.wp.type === "gun") {
+            const [x, y] = pointFromAngle(
                 this.centerX,
                 this.centerY + this.wp.barrelY,
                 this.mouseRotation,
                 this.wp.barrelX,
             )
 
-            Game.bullets.push(
-                new Bullet({
-                    type: this.weapon,
-                    x,
-                    y,
-                    r: this.mouseRotation,
-                    speed: this.wp.bulletSpeed,
-                    damage: this.wp.damage,
-                    lifetime: this.wp.lifetime,
-                }),
-            )
+            const [x2, y2] = pointFromAngle(x, y, this.mouseRotation, this.wp.lifetime * this.wp.bulletSpeed)
 
-            this.xVel += Math.cos(this.mouseRotation) * -this.wp.recoilX
-            this.recoilRotation += (Math.PI / 180) * this.wp.recoilY
-            this.fireCooldown = this.wp.reload
-            this.hasFired = true
+            canvas
+                .strokeStyle(
+                    `rgba(255, 255, 255, ${constrain(Math.PI / 180 / this.recoilRotation / this.wp.recoilY, 0, 1) * 0.2})`,
+                )
+                .lineWidth(2)
+                .path()
+                .moveTo(x, y)
+                .lineTo(x2, y2)
+                .stroke()
+                .close()
         }
 
-        if (Controls.released && this.hasFired) {
-            this.hasFired = false
-        }
-
-        this.recoilRotation += -this.recoilRotation / 10
-
-        if (mouseX > this.centerX) this.dir = 1
-        else if (mouseX < this.centerX) this.dir = -1
-
-        const weaponKeys: Record<string, WeaponKey> = {
-            "1": "ar15",
-            "2": "1911",
-            "3": "glock",
-            "4": "ak47",
-            "5": "mp5",
-            "6": "uzi",
-            "7": "m24",
-        }
-
-        for (const [key, w] of Object.entries(weaponKeys)) {
-            if (Controls.keysDown(key)) {
-                this.weapon = w
-            }
-        }
-    }
-
-    moveX() {
-        if (Controls.keysDown("ArrowRight", "d", "D")) {
-            this.xVel += this.xAcc
-            this.rotateTo = Math.PI / 32
-            this.movingDir = 1
-        } else if (Controls.keysDown("ArrowLeft", "a", "A")) {
-            this.xVel -= this.xAcc
-            this.rotateTo = -Math.PI / 32
-            this.movingDir = -1
-        } else {
-            this.rotateTo = 0
-            this.movingDir = 0
-        }
-
-        const speedCap = this.speed - this.wp.weight
-
-        this.xVel += (0 - this.xVel) / 10
-        this.xVel = constrain(this.xVel, -speedCap, speedCap)
-
-        this.x += this.xVel
-    }
-
-    moveY() {
-        if (this.canJump && Controls.keysDown("ArrowUp", "w", "W", " ")) {
-            this.yVel = -(this.jumpForce - this.wp.weight)
-            this.canJump = false
-        }
-
-        if (this.yVel + Game.gravity < Game.maxVelocity) {
-            this.yVel += Game.gravity
-        }
-
-        this.yVel = constrain(this.yVel, -this.jumpForce, Game.maxVelocity)
-        this.y += this.yVel
+        canvas
+            .push()
+            .translate(this.centerX - 2.5 * this.baseScaleTo, this.y + 30 - 2.5)
+            .rotate(this.mouseRotation + (this.dir === -1 ? Math.PI : 0))
+            .scale(this.dir, 1)
+            .rotate(0)
+        this.wp.render(this.fireFrame, "rgb(25, 60, 5)")
+        canvas.pop()
     }
 }

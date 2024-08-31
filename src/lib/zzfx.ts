@@ -1,3 +1,4 @@
+/* eslint-disable */
 // ZzFX - Zuper Zmall Zound Zynth - Micro Edition
 // MIT License - Copyright 2019 Frank Force
 // https://github.com/KilledByAPixel/ZzFX
@@ -54,9 +55,7 @@ const zzfxG = // generate samples
         let PI2 = Math.PI * 2,
             sign = (v: any) => (v < 0 ? -1 : 1),
             startSlide = (slide *= (500 * PI2) / zzfxR / zzfxR),
-            startFrequency = (frequency *=
-                ((1 + randomness * 2 * Math.random() - randomness) * PI2) /
-                zzfxR),
+            startFrequency = (frequency *= ((1 + randomness * 2 * Math.random() - randomness) * PI2) / zzfxR),
             b = [],
             t = 0,
             tm = 0,
@@ -116,41 +115,34 @@ const zzfxG = // generate samples
 
                 s =
                     (repeatTime
-                        ? 1 -
-                        tremolo +
-                        tremolo * Math.sin((PI2 * i) / repeatTime) // tremolo
+                        ? 1 - tremolo + tremolo * Math.sin((PI2 * i) / repeatTime) // tremolo
                         : 1) *
                     sign(s) *
                     Math.abs(s) ** shapeCurve * // curve
                     (i < attack
                         ? i / attack // attack
                         : i < attack + decay // decay
-                            ? 1 - ((i - attack) / decay) * (1 - sustainVolume) // decay falloff
-                            : i < attack + decay + sustain // sustain
-                                ? sustainVolume // sustain volume
-                                : i < length - delay // release
-                                    ? ((length - i - delay) / release) * // release falloff
-                                    sustainVolume // release volume
-                                    : 0) // post release
+                          ? 1 - ((i - attack) / decay) * (1 - sustainVolume) // decay falloff
+                          : i < attack + decay + sustain // sustain
+                            ? sustainVolume // sustain volume
+                            : i < length - delay // release
+                              ? ((length - i - delay) / release) * // release falloff
+                                sustainVolume // release volume
+                              : 0) // post release
 
                 s = delay
                     ? s / 2 +
-                    (delay > i
-                        ? 0 // delay
-                        : ((i < length - delay ? 1 : (length - i) / delay) * // release delay
-                            b[(i - delay) | 0]) /
-                        2 /
-                        volume)
+                      (delay > i
+                          ? 0 // delay
+                          : ((i < length - delay ? 1 : (length - i) / delay) * // release delay
+                                b[(i - delay) | 0]) /
+                            2 /
+                            volume)
                     : s // sample delay
 
                 if (filter)
                     // apply filter
-                    s = y1 =
-                        b2 * x2 +
-                        b1 * (x2 = x1) +
-                        b0 * (x1 = s) -
-                        a2 * y2 -
-                        a1 * (y2 = y1)
+                    s = y1 = b2 * x2 + b1 * (x2 = x1) + b0 * (x1 = s) - a2 * y2 - a1 * (y2 = y1)
             }
 
             f =

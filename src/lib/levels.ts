@@ -9,7 +9,7 @@ export interface Level {
 
 export const levels: Array<Level> = [
     {
-        map: ["", " 8a", " 7@a", "a5 3a5", " 5a5", " 10a5e", " 15a"],
+        map: [" 11", "@ 10a rrrrrrrrrrrrrr", "a25"],
     },
 ]
 
@@ -33,28 +33,14 @@ export function createLevel() {
             const repeat = Number(chunk.slice(1) || 1)
 
             if (blockType === "@") {
-                Game.entities.push(
-                    new Player(x * Game.blockSize, i * Game.blockSize),
-                )
+                Game.entities.push(new Player(x * Game.blockSize, i * Game.blockSize))
             } else if (blockType in enemyMap) {
-                for(let q = 0; q < repeat; q++) {
-                    Game.entities.push(
-                        new Enemy(
-                            enemyMap[blockType],
-                            (q + x) * Game.blockSize,
-                            i * Game.blockSize,
-                        ),
-                    )
+                for (let q = 0; q < repeat; q++) {
+                    Game.entities.push(new Enemy(enemyMap[blockType], (q + x) * Game.blockSize, i * Game.blockSize))
                 }
             } else if (blockType in blockMap) {
                 for (let q = 0; q < repeat; q++) {
-                    Game.blocks.push(
-                        new Block(
-                            blockType,
-                            (q + x) * Game.blockSize,
-                            i * Game.blockSize,
-                        ),
-                    )
+                    Game.blocks.push(new Block(blockType, (q + x) * Game.blockSize, i * Game.blockSize))
                 }
             }
 

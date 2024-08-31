@@ -1,11 +1,8 @@
 import Game from "@/lib/game"
 import { canvas } from "@/lib/canvas/index"
-import {
-    lineRectCollision,
-    pointFromAngle,
-    rectCollision,
-} from "@/lib/utils"
+import { lineRectCollision, rectCollision } from "@/lib/utils"
 import { Entity } from "./entity"
+import { Enemy } from "./enemy"
 
 export type BlockType = "a"
 
@@ -25,33 +22,14 @@ export class Block {
     }
 
     render() {
-        canvas
-            .fillStyle("grey")
-            .fillRect(this.x, this.y, Game.blockSize, Game.blockSize)
+        canvas.fillStyle("grey").fillRect(this.x, this.y, Game.blockSize, Game.blockSize)
     }
 
     run() {
-        for (let bullet of Game.bullets) {
-            let [x, y] = pointFromAngle(bullet.x, bullet.y, bullet.r, 10)
-            let [x2, y2] = pointFromAngle(
-                bullet.x,
-                bullet.y,
-                bullet.r + Math.PI,
-                10,
-            )
+        for (const bullet of Game.bullets) {
+            const [x, y, x2, y2] = bullet.hitPoints()
 
-            if (
-                lineRectCollision(
-                    x,
-                    y,
-                    x2,
-                    y2,
-                    this.x,
-                    this.y,
-                    Game.blockSize,
-                    Game.blockSize,
-                ).colliding
-            ) {
+            if (lineRectCollision(x, y, x2, y2, this.x, this.y, Game.blockSize, Game.blockSize).colliding) {
                 bullet.dead = true
             }
         }
@@ -74,7 +52,7 @@ export class Block {
     collideY() {
         for (const entity of Game.entities) {
             if (this.isCollidingWith(entity)) {
-                if (entity.yVel > 0) {
+                if (entity.yVel > 0 && (entity instanceof Enemy ? !entity.dying : !entity.dead)) {
                     entity.y = this.y - entity.h
                     entity.yVel = 0
                     entity.canJump = true
@@ -88,17 +66,8 @@ export class Block {
         }
     }
 
-    private isCollidingWith<T extends Entity>(entity: T) {
-        return rectCollision(
-            entity.x,
-            entity.y,
-            entity.w,
-            entity.h,
-            this.x,
-            this.y,
-            Game.blockSize,
-            Game.blockSize,
-        )
+    isCollidingWith<T extends Entity>(entity: T) {
+        return rectCollision(entity.x, entity.y, entity.w, entity.h, this.x, this.y, Game.blockSize, Game.blockSize)
     }
 
     lineCollision(x: number, y: number, x2: number, y2: number) {

@@ -1,1 +1,1 @@
-declare const c2d 
+declare const c2d

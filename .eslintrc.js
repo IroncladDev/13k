@@ -8,9 +8,21 @@ module.exports = {
         ecmaVersion: 2020,
         sourceType: "module",
     },
-    plugins: ["unused-imports", "@typescript-eslint"],
+    plugins: ["unused-imports", "@typescript-eslint", "prettier"],
+    extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended",
+    ],
     rules: {
-        indent: ["error", 4],
+        indent: "off",
+        "prettier/prettier": [
+            "error",
+            {
+                tabWidth: 4,
+                useTabs: false,
+            },
+        ],
         "no-console": "off",
         "no-debugger": "off",
         "prefer-destructuring": "off",
@@ -25,6 +37,8 @@ module.exports = {
         "import/prefer-default-export": "off",
         "guard-for-in": "error",
         "arrow-parens": "off",
+        "comma-dangle": "off",
+        "no-sparse-arrays": "off",
         semi: ["warn", "never"],
         "arrow-body-style": "off",
         "no-multiple-empty-lines": ["error", { max: 2, maxBOF: 1 }],
@@ -91,4 +105,4 @@ module.exports = {
             typescript: {},
         },
     },
-};
+}

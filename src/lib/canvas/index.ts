@@ -1,7 +1,6 @@
 import { CanvasPath } from "./path"
 
-export type CtxValue<T extends keyof CanvasRenderingContext2D> =
-    CanvasRenderingContext2D[T]
+export type CtxValue<T extends keyof CanvasRenderingContext2D> = CanvasRenderingContext2D[T]
 
 export type CtxParams<T extends keyof CanvasRenderingContext2D> = Parameters<
     CtxValue<T> extends (...args: any) => any ? CtxValue<T> : never
@@ -9,14 +8,14 @@ export type CtxParams<T extends keyof CanvasRenderingContext2D> = Parameters<
 
 export class CanvasEngine {
     context: CanvasRenderingContext2D
-    dpr: number
+    dpr = 4 // window.devicePixelRatio || 1
 
     constructor(canvas: HTMLCanvasElement) {
         this.context = canvas.getContext("2d") as CanvasRenderingContext2D
-        // might change later
-        this.dpr = 4 // window.devicePixelRatio || 1
 
+        // eslint-disable-next-line
         canvas.width = this.context.canvas.width * this.dpr
+        // eslint-disable-next-line
         canvas.height = this.context.canvas.height * this.dpr
 
         this.context.scale(this.dpr, this.dpr)
@@ -57,8 +56,13 @@ export class CanvasEngine {
     }
 
     // Images
-    drawImage(...args: CtxParams<"drawImage">) {
-        this.context.drawImage(...args)
+    // eslint-disable-next-line
+    drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number) {
+        this.context.drawImage(image, sx, sy, sw * this.dpr, sh * this.dpr)
+        return this
+    }
+    putImageData(imagedata: ImageData, dx: number, dy: number) {
+        this.context.putImageData(imagedata, dx, dy)
         return this
     }
 
@@ -105,14 +109,17 @@ export class CanvasEngine {
         this.context.restore()
         return this
     }
+    // eslint-disable-next-line
     scale(...args: CtxParams<"scale">) {
         this.context.scale(...args)
         return this
     }
+    // eslint-disable-next-line
     translate(...args: CtxParams<"translate">) {
         this.context.translate(...args)
         return this
     }
+    // eslint-disable-next-line
     rotate(...args: CtxParams<"rotate">) {
         this.context.rotate(...args)
         return this
@@ -126,6 +133,10 @@ export class CanvasEngine {
     stroke(...args: CtxParams<"stroke">) {
         this.context.stroke(...args)
         return this
+    }
+
+    getImageData(sx: number, sy: number, sw: number, sh: number, settings?: ImageDataSettings) {
+        return this.context.getImageData(sx * this.dpr, sy * this.dpr, sw * this.dpr, sh * this.dpr, settings)
     }
 }
 

@@ -7,20 +7,14 @@ export class Particle {
     y: number
     type: ParticleType
     attributes: ParticleAttributes<ParticleType>
-    dead: boolean = false
+    dead = false
 
-    constructor(
-        type: ParticleType,
-        x: number,
-        y: number,
-        attributes: ParticleAttributes<ParticleType>,
-    ) {
+    constructor(type: ParticleType, x: number, y: number, attributes: ParticleAttributes<ParticleType>) {
         this.x = x
         this.y = y
         this.type = type
         this.attributes = attributes
     }
 
-    run() {
-    }
+    run() {}
 }

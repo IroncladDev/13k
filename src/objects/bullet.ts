@@ -1,5 +1,7 @@
 import { canvas } from "@/lib/canvas/index"
+import { lineRectCollision, pointFromAngle } from "@/lib/utils"
 import { WeaponKey } from "@/lib/weapons"
+import { Entity } from "./entity"
 
 export class Bullet {
     x: number
@@ -8,9 +10,10 @@ export class Bullet {
     r: number
     speed: number
     damage: number
-    dead: boolean = false
-    duration: number = 0
-    lifetime: number = 0
+    dead = false
+    duration = 0
+    lifetime = 0
+    entity: Entity
 
     constructor({
         type,
@@ -20,6 +23,7 @@ export class Bullet {
         speed,
         damage,
         lifetime,
+        entity,
     }: {
         type: WeaponKey
         x: number
@@ -28,6 +32,7 @@ export class Bullet {
         speed: number
         damage: number
         lifetime: number
+        entity: Entity
     }) {
         this.type = type
         this.x = x
@@ -36,6 +41,7 @@ export class Bullet {
         this.speed = speed
         this.damage = damage
         this.lifetime = lifetime
+        this.entity = entity
     }
 
     render() {
@@ -45,12 +51,7 @@ export class Bullet {
             .translate(this.x, this.y)
             .rotate(this.r)
             .fillRect(-10, -2, 20, 4)
-            .fillRect(
-                (-this.duration * this.speed) / 2,
-                -1,
-                (this.duration * this.speed) / 2,
-                2,
-            )
+            .fillRect((-this.duration * this.speed) / 2, -1, (this.duration * this.speed) / 2, 2)
             .pop()
     }
 
@@ -62,5 +63,16 @@ export class Bullet {
         if (this.duration > this.lifetime) {
             this.dead = true
         }
+    }
+
+    hitPoints(): [number, number, number, number] {
+        const p1 = pointFromAngle(this.x, this.y, this.r, this.speed / 2)
+        const p2 = pointFromAngle(this.x, this.y, this.r + Math.PI, this.speed / 2)
+
+        return [...p1, ...p2]
+    }
+
+    withRectCollision(x: number, y: number, w: number, h: number) {
+        return lineRectCollision(...this.hitPoints(), x, y, w, h)
     }
 }

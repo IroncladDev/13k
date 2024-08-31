@@ -4,11 +4,7 @@ export class CanvasPath {
     engine: CanvasEngine
     constructor(engine: CanvasEngine) {
         this.engine = engine
-    }
-
-    beginPath() {
         this.engine.context.beginPath()
-        return this
     }
 
     moveTo(...args: CtxParams<"moveTo">) {
@@ -27,7 +23,7 @@ export class CanvasPath {
     }
 
     roundRect(...args: CtxParams<"roundRect">) {
-        this.engine.context['roundRect'](...args)
+        this.engine.context["roundRect"](...args)
         return this
     }
 
