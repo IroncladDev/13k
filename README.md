@@ -1,8 +1,9 @@
 # The Bukele Protocol: MS-13 Takedown
 
 ## Todo
-- dash function for player
+- dash / duck / dive function for player
 - bullet knockback
+- staggered movement for body / leg shots
 - ammo
 
 ## Controls

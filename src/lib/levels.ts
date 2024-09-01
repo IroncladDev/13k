@@ -9,7 +9,7 @@ export interface Level {
 
 export const levels: Array<Level> = [
     {
-        map: [" 11", "@ 10a rrrrrrrrrrrrrr", "a25"],
+        map: [" 11", "@ 10a r h r h r h r h", "a25"],
     },
 ]
 

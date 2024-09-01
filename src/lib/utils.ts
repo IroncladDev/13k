@@ -149,3 +149,22 @@ export function circleRect(
 
     return { colliding: false }
 }
+
+/* eslint-disable */
+export const normalizeAngle = (angle: number, rotation: number) => {
+    angle = angle % (Math.PI * 2)
+
+    let delta = angle - (rotation % (Math.PI * 2))
+    if (delta < -Math.PI) delta += Math.PI * 2
+    if (delta > Math.PI) delta -= Math.PI * 2
+
+    return rotation + delta
+}
+
+export const normalizeToRange = (angle: number) => {
+    angle = angle % (Math.PI * 2)
+    if (angle > Math.PI) angle -= Math.PI * 2
+    if (angle < -Math.PI) angle += Math.PI * 2
+    return angle
+}
+/* eslint-enable */

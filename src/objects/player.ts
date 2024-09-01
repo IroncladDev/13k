@@ -1,7 +1,7 @@
 import Controls from "@/lib/controls"
 import Game from "@/lib/game"
 import { canvas } from "@/lib/canvas/index"
-import { angleTo, constrain, dist, pointFromAngle } from "@/lib/utils"
+import { angleTo, constrain, dist, normalizeAngle, pointFromAngle } from "@/lib/utils"
 import { sfx } from "@/lib/sfx"
 import { zzfx } from "@/lib/zzfx"
 import { Entity } from "./entity"
@@ -10,7 +10,7 @@ import { levels } from "@/lib/levels"
 import { Enemy } from "./enemy"
 
 export class Player extends Entity {
-    mouseRotation = 0
+    dirTo = 0
     hasFired = false
     health = {
         head: 14,
@@ -74,7 +74,7 @@ export class Player extends Entity {
         if (mouseX > this.centerX) this.dir = 1
         else if (mouseX < this.centerX) this.dir = -1
 
-        this.mouseRotation = angleTo(this.centerX, this.centerY, mouseX, mouseY) - this.recoilRotation * this.dir
+        this.weaponRotation = angleTo(this.centerX, this.centerY, mouseX, mouseY)
 
         // Run base behavior functions
         this.animateVars()
@@ -105,14 +105,14 @@ export class Player extends Entity {
                         enemy instanceof Enemy
                     ) {
                         enemy.health.body -= this.wp.damage
-                        enemy.hasSeenPlayer = true
+                        enemy.dir = this.x < enemy.x ? -1 : 1
                         enemy.xVel -= this.wp.knockback * enemy.dir
                         enemy.yVel -= this.wp.knockback
                     }
                 }
             } else {
                 // TODO: some sort of alert system for enemies and nearby enemies
-                this.shoot(this.mouseRotation)
+                this.shoot(this.weaponRotationTo)
             }
 
             this.hasFired = true
@@ -136,7 +136,7 @@ export class Player extends Entity {
             .lineCap("round")
             .push()
             .translate(-2.5 * this.baseScaleTo, -25)
-            .scale(this.dir, 1)
+            .scale(this.dirTo, 1)
             .rotate(
                 this.movingDirTo * ((Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
@@ -147,7 +147,7 @@ export class Player extends Entity {
             .pop()
             .push()
             .translate(-2.5 * this.baseScaleTo, -25)
-            .scale(this.dir, 1)
+            .scale(this.dirTo, 1)
             .rotate(
                 this.movingDirTo * ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
@@ -182,11 +182,11 @@ export class Player extends Entity {
             const [x, y] = pointFromAngle(
                 this.centerX,
                 this.centerY + this.wp.barrelY,
-                this.mouseRotation,
+                this.weaponRotationTo,
                 this.wp.barrelX,
             )
 
-            const [x2, y2] = pointFromAngle(x, y, this.mouseRotation, this.wp.lifetime * this.wp.bulletSpeed)
+            const [x2, y2] = pointFromAngle(x, y, this.weaponRotationTo, this.wp.lifetime * this.wp.bulletSpeed)
 
             canvas
                 .strokeStyle(
@@ -203,8 +203,8 @@ export class Player extends Entity {
         canvas
             .push()
             .translate(this.centerX - 2.5 * this.baseScaleTo, this.y + 30 - 2.5)
-            .rotate(this.mouseRotation + (this.dir === -1 ? Math.PI : 0))
-            .scale(this.dir, 1)
+            .rotate(this.weaponRotationTo)
+            .scale(1, this.dirTo)
             .rotate(0)
         this.wp.render(this.fireFrame, "rgb(25, 60, 5)")
         canvas.pop()

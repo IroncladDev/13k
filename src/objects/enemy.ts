@@ -4,7 +4,7 @@ import { enemies, EnemyStats, EnemyType } from "@/lib/enemies/stats"
 import Game from "@/lib/game"
 import { levels } from "@/lib/levels"
 import { sfx } from "@/lib/sfx"
-import { angleTo, dist, pointFromAngle, pointRectCollision } from "@/lib/utils"
+import { angleTo, dist, lineRectCollision, normalizeToRange, pointFromAngle, pointRectCollision } from "@/lib/utils"
 import { zzfx } from "@/lib/zzfx"
 import { Entity } from "./entity"
 import { Player } from "./player"
@@ -21,9 +21,8 @@ export const enemyMap: Record<string, EnemyType> = {
 
 export class Enemy extends Entity {
     type: EnemyType
-    weaponRotation = 0
     canSeePlayer = false
-    clearLineToPlayer = false
+    baseLineToPlayer = false
     canShootPlayer = false
     hasSeenPlayer = false
     health = {
@@ -73,12 +72,14 @@ export class Enemy extends Entity {
         this.headRightImage = document.createElement("canvas")
         this.bodyImage = document.createElement("canvas")
 
+        /* eslint-disable */
         this.headLeftImage.width = 15 * canvas.dpr
         this.headLeftImage.height = 15 * canvas.dpr
         this.headRightImage.width = 15 * canvas.dpr
         this.headRightImage.height = 15 * canvas.dpr
         this.bodyImage.width = 25 * canvas.dpr
         this.bodyImage.height = 40 * canvas.dpr
+        /* eslint-enable */
 
         this.headLeftImage
             .getContext("2d")
@@ -91,37 +92,42 @@ export class Enemy extends Entity {
             ?.putImageData(bodiesCanvas.getImageData(25 * shirt, shirtColorIndex * 40, 25, 40), 0, 0)
     }
 
-    run() {
-        // Dead & Dying states
-        if (this.y > levels[Game.level].map.length * Game.blockSize) this.dead = true
-        if (this.health.head <= 0) this.dying = true
+    checkHealth() {
         if (this.health.body <= 0) {
             this.dying = this.health.body < -5
             this.hasSurrendered = !this.dying
             if (this.hasSurrendered) this.h = 60
         }
+        if (this.health.head <= 0) this.dying = true
         if (this.health.legs <= 0) {
             this.hasSurrendered = true
             this.h = 60
         }
-        if (this.dying || this.hasSurrendered) this.movingDir = 0
-        if (this.dying) {
-            this.xVel = 0
-            this.movingDir = this.movingDirTo = 0
-            this.dyingFrame += this.dyingFrame.tween(1, 10)
-            this.baseRotation = (this.dir === 1 ? Math.PI / 2 : -Math.PI / 2) * this.dyingFrame
-            return
-        }
+    }
 
+    run() {
+        if (this.y > levels[Game.level].map.length * Game.blockSize) this.dead = true
+
+        this.checkHealth()
         this.animateVars()
-        this.handleBulletCollisions(() => {
-            this.hasSeenPlayer = true
+        this.handleBulletCollisions(bullet => {
+            this.checkHealth()
+
+            if (!this.hasSurrendered && !this.dying) {
+                const minRot = normalizeToRange(bullet.r)
+                this.dir = minRot > -Math.PI / 2 && minRot < Math.PI / 2 ? -1 : 1
+            }
         })
 
         if (this.hasSurrendered) {
-            this.xVel = 0
-            this.movingDir = 0
-            this.movingDirTo = 0
+            this.xVel = this.movingDir = this.movingDirTo = 0
+            return
+        }
+
+        if (this.dying) {
+            this.xVel = this.movingDir = this.movingDirTo = 0
+            this.dyingFrame += this.dyingFrame.tween(1, 10)
+            this.baseRotation = (this.dir === 1 ? Math.PI / 2 : -Math.PI / 2) * this.dyingFrame
             return
         }
 
@@ -129,67 +135,89 @@ export class Enemy extends Entity {
 
         // 4x slower fire rate cooldown for semiauto weapons
         if (this.fireCooldown > 0) {
-            this.fireCooldown -= this.wp.type === "meelee" || this.wp.fireMode === "auto" ? 1 : 0.25
+            this.fireCooldown -= this.wp.type === "meelee" ? 0.5 : this.wp.fireMode === "auto" ? 1 : 0.25
         }
 
         const player = this.getPlayer()
+
+        const gunTip: [number, number] =
+            this.wp.type === "meelee"
+                ? [0, 0]
+                : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
 
         // If the enemy can see the player
         if (this.canSeePlayer) {
             if (!this.hasSeenPlayer) this.hasSeenPlayer = true
 
-            this.weaponRotation =
-                angleTo(this.centerX, this.centerY, player.centerX, player.centerY) - this.recoilRotation * this.dir
-
             if (this.wp.type === "meelee") {
+                this.weaponRotation = angleTo(this.centerX, this.centerY, player.centerX, player.centerY)
+
                 const playerDist = dist(this.centerX, this.centerY, player.centerX, player.centerY)
 
                 if (this.fireCooldown === 0 && playerDist < this.wp.range) {
-                    if (playerDist < this.wp.range / 2) {
-                        player.health.body -= this.wp.damage
-                    }
-                    this.xVel += 10 * this.dir
+                    const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx["whoosh1"]).slice()
+                    sound[0] = 0.3
+                    zzfx(...sound)
+
+                    player.health.body -= this.wp.damage
                     this.fireFrame = 1
                     this.fireCooldown = this.wp.reload
                 }
-                return
-            }
+            } else {
+                this.weaponRotation = angleTo(gunTip[0], gunTip[1], player.centerX, player.centerY)
 
-            if (this.fireCooldown === 0 && this.canShootPlayer) {
-                const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx["shoot1"]).slice()
-                sound[0] = 0.3
-                zzfx(...sound)
-                this.fireFrame = 1
+                canvas
+                    .strokeStyle("red")
+                    .lineWidth(2)
+                    .lineCap("round")
+                    .path()
+                    .moveTo(...gunTip)
+                    .lineTo(player.centerX, player.centerY)
+                    .stroke()
+                    .close()
 
-                this.shoot(this.weaponRotation)
+                if (this.fireCooldown === 0 && this.canShootPlayer) {
+                    const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx["shoot1"]).slice()
+                    sound[0] = 0.3
+                    zzfx(...sound)
+                    this.fireFrame = 1
+
+                    this.shoot(this.weaponRotationTo)
+                }
             }
         }
 
         // If the enemy has seen the player
         if (this.hasSeenPlayer) {
-            const range = this.wp.type === "meelee" ? this.w * 2 : this.wp.lifetime * this.wp.bulletSpeed
-
             if (player.centerX > this.centerX) {
                 this.dir = 1
-            } else {
+            } else if (player.centerX < this.centerX) {
                 this.dir = -1
             }
 
-            if (player.centerX > this.centerX + Math.min(range / 2, 200)) {
-                this.movingDir = 1
-            } else if (player.centerX < this.centerX - Math.min(range / 2, 200)) {
-                this.movingDir = -1
-            } else {
-                this.movingDir = 0
-            }
+            if (this.wp.type === "meelee") {
+                if (Math.abs(this.centerX - player.centerX) > this.wp.range) {
+                    this.movingDir = player.centerX > this.centerX ? 1 : -1
+                } else {
+                    this.movingDir = 0
+                }
 
-            if (
-                (!this.canSeePlayer || !this.clearLineToPlayer || player.centerY < this.centerY) &&
-                this.canJump &&
-                !this.dying &&
-                !this.hasSurrendered
-            ) {
-                this.jump()
+                if (!this.baseLineToPlayer && this.canJump && !this.dying && !this.hasSurrendered) {
+                    this.jump()
+                }
+            } else {
+                const playerDist = dist(...gunTip, player.centerX, player.centerY)
+                const range = this.wp.lifetime * this.wp.bulletSpeed
+
+                if (playerDist >= range && !this.canShootPlayer) {
+                    this.movingDir = player.centerX > this.centerX ? 1 : -1
+                } else if (this.canShootPlayer) {
+                    this.movingDir = 0
+                }
+
+                if (!this.baseLineToPlayer && this.canJump && !this.dying && !this.hasSurrendered) {
+                    this.jump()
+                }
             }
         }
     }
@@ -208,7 +236,7 @@ export class Enemy extends Entity {
             .lineCap("round")
             .push()
             .translate(-2.5 * this.baseScaleTo, this.hasSurrendered ? -5 : -25)
-            .scale(this.dir, 1)
+            .scale(this.dirTo, 1)
             .rotate(
                 this.hasSurrendered
                     ? -Math.PI / 4
@@ -222,7 +250,7 @@ export class Enemy extends Entity {
             .pop()
             .push()
             .translate(-2.5 * this.baseScaleTo, this.hasSurrendered ? -5 : -25)
-            .scale(this.dir, 1)
+            .scale(this.dirTo, 1)
             .rotate(
                 this.hasSurrendered
                     ? -Math.PI / 3
@@ -252,12 +280,12 @@ export class Enemy extends Entity {
             .translate(-2.5 * this.baseScaleTo, -52.5 + (this.hasSurrendered ? 20 : 0))
             .rotate(
                 this.hasSurrendered
-                    ? (Math.PI / 6) * this.dir
+                    ? Math.PI / 2 + (Math.PI / 6) * -this.dir
                     : this.dying
                       ? ((this.dyingFrame * -Math.PI) / 2) * this.dir
-                      : this.weaponRotation + (this.dir === -1 ? Math.PI : 0),
+                      : this.weaponRotationTo,
             )
-            .scale(this.dir, 1)
+            .scale(1, this.dirTo)
             .rotate(0)
         this.wp.render(this.fireFrame, this.skinColor, 5)
         canvas.pop().pop()
@@ -278,50 +306,40 @@ export class Enemy extends Entity {
     determineSight() {
         const player = this.getPlayer()
 
-        // Determine if a line can be drawn from the front of the enemy's head to the player
+        // Determine if a line can be drawn from the enemy's facing direction to the player
         this.canSeePlayer =
             (this.dir === 1 && player.centerX > this.centerX) || (this.dir === -1 && player.centerX < this.centerX)
 
-        // Determine if a line from center of player and enemy can be drawn
-        this.clearLineToPlayer = true
+        // Determine if a line from the base of the enemy to the player can be drawn
+        // Used for deciding whether to jump or not
+        this.baseLineToPlayer = true
 
-        // Determine if a line can be drawn from the gun to the player's center, including recoil offset
-        this.canShootPlayer =
+        // Determine if a line can be drawn from the gun to the player's center
+        const [x, y] =
             this.wp.type === "meelee"
-                ? false
-                : pointRectCollision(
-                      ...pointFromAngle(
-                          this.centerX,
-                          this.centerY,
-                          this.weaponRotation,
-                          dist(this.centerX, this.centerY, player.centerX, player.centerY),
-                      ),
-                      player.x,
-                      player.y + this.wp.recoilY * 4,
-                      player.w,
-                      player.h,
-                  )
+                ? [0, 0]
+                : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
+        const playerDist = dist(x, y, player.centerX, player.centerY)
+        const [x2, y2] = pointFromAngle(x, y, this.weaponRotationTo, playerDist)
+        const colliding = pointRectCollision(x2, y2, player.x, player.y, player.w, player.h)
+        this.canShootPlayer = this.wp.type === "meelee" ? false : colliding
 
         for (const block of Game.blocks) {
-            if (block.lineCollision(this.centerX, this.y + 10, player.centerX, player.centerY).colliding) {
+            if (block.lineCollision(this.centerX, this.y + 10, player.centerX, player.y + 10).colliding) {
                 this.canSeePlayer = false
-                this.clearLineToPlayer = false
+            }
+
+            // -1 to account for block collision
+            if (
+                block.lineCollision(this.centerX, this.y + this.h - 1, player.centerX, player.y + player.h - 1)
+                    .colliding
+            ) {
+                this.baseLineToPlayer = false
             }
 
             if (this.wp.type === "meelee") continue
 
-            if (
-                block.lineCollision(
-                    ...pointFromAngle(
-                        this.centerX,
-                        this.centerY + this.wp.barrelY,
-                        this.weaponRotation,
-                        this.wp.barrelX,
-                    ),
-                    player.centerX,
-                    player.centerY,
-                ).colliding
-            ) {
+            if (block.lineCollision(x, y, x2, y2).colliding) {
                 this.canShootPlayer = false
             }
         }

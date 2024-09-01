@@ -1,5 +1,5 @@
 import Game from "@/lib/game"
-import { constrain, pointFromAngle } from "@/lib/utils"
+import { constrain, normalizeAngle, pointFromAngle } from "@/lib/utils"
 import { WeaponKey, weapons } from "@/lib/weapons"
 import { Bullet } from "./bullet"
 
@@ -21,10 +21,13 @@ export abstract class Entity {
     fireFrame = 0
     canJump = false
     jumpForce = 12
+    dirTo = 1
     dir: -1 | 1 = 1
     weapon: WeaponKey = "machete"
     fireCooldown = 0
     dead = false
+    weaponRotation = 0
+    weaponRotationTo = 0
     abstract health: {
         head: number
         body: number
@@ -71,8 +74,9 @@ export abstract class Entity {
             }),
         )
 
-        this.xVel += Math.cos(r) * -this.wp.recoilX
+        if (this.movingDir !== 0) this.xVel += Math.cos(r) * -this.wp.recoilX
         this.recoilRotation += (Math.PI / 180) * this.wp.recoilY
+        this.weaponRotationTo -= this.recoilRotation * this.dir
         this.fireCooldown = this.wp.reload
     }
 
@@ -110,9 +114,14 @@ export abstract class Entity {
         this.movingDirTo += this.movingDirTo.tween(this.movingDir, 5)
         this.fireFrame += this.fireFrame.tween(0, this.wp.frameDelay || 1)
         this.recoilRotation += this.recoilRotation.tween(0, 10)
+        this.dirTo += this.dirTo.tween(this.dir, 5)
+        this.weaponRotationTo += this.weaponRotationTo.tween(
+            normalizeAngle(this.weaponRotation, this.weaponRotationTo),
+            5,
+        )
     }
 
-    handleBulletCollisions(onCollide?: (bullet: Bullet, hit: "head" | "body" | "legs") => void) {
+    handleBulletCollisions(onCollide?: (bullet: Bullet) => void) {
         for (const bullet of Game.bullets) {
             if (bullet.entity === this) continue
 
@@ -138,17 +147,17 @@ export abstract class Entity {
             if (headCollision.colliding || bodyCollision.colliding || legsCollision.colliding) {
                 if (headCollision.colliding) {
                     this.health.head -= bullet.damage
-                    onCollide?.(bullet, "head")
+                    onCollide?.(bullet)
                 }
 
                 if (bodyCollision.colliding) {
                     this.health.body -= bullet.damage
-                    onCollide?.(bullet, "body")
+                    onCollide?.(bullet)
                 }
 
                 if (legsCollision.colliding) {
                     this.health.legs -= bullet.damage
-                    onCollide?.(bullet, "legs")
+                    onCollide?.(bullet)
                 }
 
                 bullet.dead = true
