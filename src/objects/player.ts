@@ -1,16 +1,14 @@
 import Controls from "@/lib/controls"
 import Game from "@/lib/game"
 import { canvas } from "@/lib/canvas/index"
-import { angleTo, constrain, dist, normalizeAngle, pointFromAngle } from "@/lib/utils"
+import { angleTo, constrain, dist, pointFromAngle } from "@/lib/utils"
 import { sfx } from "@/lib/sfx"
 import { zzfx } from "@/lib/zzfx"
 import { Entity } from "./entity"
 import { WeaponKey } from "@/lib/weapons"
-import { levels } from "@/lib/levels"
 import { Enemy } from "./enemy"
 
 export class Player extends Entity {
-    dirTo = 0
     hasFired = false
     health = {
         head: 14,
@@ -22,31 +20,43 @@ export class Player extends Entity {
         body: 30,
         legs: 15,
     }
+    dashDelay = 100
+    dashTime = 100
+    sounds = {
+        footstep: [false, false] as [boolean, boolean],
+    }
 
     constructor(x: number, y: number) {
         super(x, y)
+
+        this.speed = 7
     }
 
     run() {
         // Dead & Dying states
-        if (
-            this.y > levels[Game.level].map.length * Game.blockSize ||
-            this.health.head <= 0 ||
-            this.health.body <= 0 ||
-            this.health.legs <= 0
-        ) {
+        if (this.health.head <= 0 || this.health.body <= 0 || this.health.legs <= 0) {
             this.dead = true
         }
 
         // Movement
-        if (Controls.keysDown("ArrowRight", "d", "D")) {
+        if (Controls.keysDown("ArrowRight", "d")) {
             this.movingDir = 1
-        } else if (Controls.keysDown("ArrowLeft", "a", "A")) {
+        } else if (Controls.keysDown("ArrowLeft", "a")) {
             this.movingDir = -1
         } else {
             this.movingDir = 0
         }
-        if (Controls.keysDown("ArrowUp", "w", "W", " ") && this.canJump) this.jump()
+        if (Controls.keysDown("ArrowUp", "w", " ") && this.canJump) {
+            zzfx(...sfx["jump"])
+            this.jump()
+        }
+
+        if (this.dashTime > 0) this.dashTime--
+
+        if (this.dashTime === 0 && Controls.keysDown("Shift") && this.canJump && !this.isAgainstWall) {
+            this.knockback += 20 * this.movingDir * -this.dir
+            this.dashTime = this.dashDelay
+        }
 
         // Misc weapon switching
         const weaponKeys: Record<string, WeaponKey> = {
@@ -59,6 +69,8 @@ export class Player extends Entity {
             "7": "m24",
             "8": "karambit",
             "9": "machete",
+            "0": "spas12",
+            "q": "dragunov",
         }
 
         for (const [key, w] of Object.entries(weaponKeys)) {
@@ -76,10 +88,7 @@ export class Player extends Entity {
 
         this.weaponRotation = angleTo(this.centerX, this.centerY, mouseX, mouseY)
 
-        // Run base behavior functions
         this.animateVars()
-
-        // Handle bullet collisions
         this.handleBulletCollisions()
 
         if (this.fireCooldown > 0) this.fireCooldown--
@@ -96,23 +105,23 @@ export class Player extends Entity {
             // Meelee weapons
             if (this.wp.type === "meelee") {
                 for (const enemy of Game.entities) {
-                    const enemyDist = dist(this.centerX, this.centerY, enemy.centerX, enemy.centerY)
+                    const [x, y] = pointFromAngle(this.centerX, this.centerY, this.weaponRotationTo, this.wp.range)
+                    const strikeDist = dist(x, y, enemy.centerX, enemy.centerY)
 
-                    if (
-                        ((enemyDist < this.wp.range / 2 &&
-                            (this.dir === 1 ? enemy.centerX > this.centerX : enemy.centerX < this.centerX)) ||
-                            enemyDist < this.wp.range / 4) &&
-                        enemy instanceof Enemy
-                    ) {
+                    if (strikeDist < this.wp.range && enemy instanceof Enemy) {
+                        zzfx(...sfx["strike"])
                         enemy.health.body -= this.wp.damage
-                        enemy.dir = this.x < enemy.x ? -1 : 1
-                        enemy.xVel -= this.wp.knockback * enemy.dir
-                        enemy.yVel -= this.wp.knockback
+                        if (!enemy.hasSurrendered && !enemy.dying) {
+                            enemy.dir = this.x < enemy.x ? -1 : 1
+                            enemy.knockback = this.wp.knockback
+                            enemy.rotateTo += this.wp.knockback * 2 * (Math.PI / 180) * -enemy.dir
+                        }
                     }
                 }
             } else {
                 // TODO: some sort of alert system for enemies and nearby enemies
                 this.shoot(this.weaponRotationTo)
+                this.notifyClosest(this.x)
             }
 
             this.hasFired = true
@@ -126,17 +135,34 @@ export class Player extends Entity {
     render() {
         const speedWeightRatio = this.wp.type === "meelee" ? 1 : (this.speed - this.wp.weight) / this.speed
 
+        if (Math.floor(Math.cos((Game.frameCount / 2.5) * speedWeightRatio)) === 0 && this.movingDir !== 0) {
+            this.sounds.footstep[1] = true
+        } else {
+            this.sounds.footstep[1] = false
+        }
+
+        if (this.sounds.footstep[1] && !this.sounds.footstep[0] && this.canJump) {
+            zzfx(...sfx[Math.random() > 0.5 ? "footstep" : "footstep2"])
+            this.sounds.footstep[0] = true
+            setTimeout(() => {
+                this.sounds.footstep[0] = false
+            }, 200)
+        }
+
         canvas
             .push()
             .translate(this.centerX, this.y + this.h)
             .rotate(this.baseRotation)
             // Legs
-            .strokeStyle("rgb(25, 60, 5)")
             .lineWidth(7.5)
             .lineCap("round")
+            .strokeStyle("rgb(15, 50, 5)")
             .push()
-            .translate(-2.5 * this.baseScaleTo, -25)
-            .scale(this.dirTo, 1)
+            .translate(
+                -2.5 * this.baseScaleTo + Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
+                -25,
+            )
+            .scale(this.dirTo, 1 - Math.sin((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 0.15)
             .rotate(
                 this.movingDirTo * ((Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
@@ -145,9 +171,13 @@ export class Player extends Entity {
             .stroke()
             .close()
             .pop()
+            .strokeStyle("rgb(35, 70, 15)")
             .push()
-            .translate(-2.5 * this.baseScaleTo, -25)
-            .scale(this.dirTo, 1)
+            .translate(
+                -2.5 * this.baseScaleTo - Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
+                -25,
+            )
+            .scale(this.dirTo, 1 + Math.sin((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 0.15)
             .rotate(
                 this.movingDirTo * ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
@@ -179,13 +209,7 @@ export class Player extends Entity {
             .pop()
 
         if (this.wp.type === "gun") {
-            const [x, y] = pointFromAngle(
-                this.centerX,
-                this.centerY + this.wp.barrelY,
-                this.weaponRotationTo,
-                this.wp.barrelX,
-            )
-
+            const [x, y] = this.gunTip()
             const [x2, y2] = pointFromAngle(x, y, this.weaponRotationTo, this.wp.lifetime * this.wp.bulletSpeed)
 
             canvas

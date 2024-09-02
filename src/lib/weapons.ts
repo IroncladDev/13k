@@ -34,18 +34,75 @@ type MeeleeWeapon = {
     render(frame: number, armColor?: string, armWidth?: number): void
 }
 
-export type Weapon = GunWeapon | MeeleeWeapon
+export const weapons: Record<string, GunWeapon | MeeleeWeapon> = {
+    ["dragunov"]: {
+        name: "Dragunov",
+        reload: 20,
+        recoilX: 10,
+        recoilY: 15,
+        lifetime: 50,
+        damage: 10,
+        bulletSpeed: 70,
+        barrelX: 80,
+        barrelY: -5,
+        weight: 3.5,
+        fireMode: "semi",
+        sound: "shoot3",
+        frameDelay: 1,
+        type: "gun",
 
-// TODO: need a shotgun and some sort of superweapon for leader. Need one more rifle and smg
-export const weapons: Record<string, Weapon> = {
+        render(_: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            canvas
+                // Arm in back
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .push()
+                .scale(2, 1)
+                .path()
+                .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+                // Gun body
+                .fillStyle("black")
+                .path()
+                .roundRect(5, 7.5, 5, 15, [2, 0, 10, 2])
+                .roundRect(5, 7.5, 40, 5, 2)
+                .roundRect(25, 2.5, 60, 10, 5)
+                .roundRect(25, 7.5, 5, 15, 2)
+                .roundRect(30, 10, 10, 5, 2)
+                .roundRect(40, 5, 80, 5, 2)
+                .roundRect(100, 0, 5, 10, 2)
+                .roundRect(75, 5, 10, 6, 2)
+                .fill()
+                .close()
+                // Magazine
+                .strokeStyle("black")
+                .lineWidth(10)
+                .lineCap("square")
+                .path()
+                .arc(75, 10, 20, Math.PI / 1.1, Math.PI)
+                .stroke()
+                .close()
+                // Arm in front
+                .strokeStyle(armColor)
+                .lineWidth(5)
+                .lineCap("round")
+                .path()
+                .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+        },
+    },
     ["machete"]: {
         type: "meelee",
         name: "Machete",
         reload: 10,
         frameDelay: 5,
-        range: 100,
+        range: 50,
         damage: 5,
-        knockback: 7,
+        knockback: 20,
         sound: "whoosh1",
 
         render(frame, armColor = "rgb(35, 80, 10)", armWidth = 5) {
@@ -76,14 +133,14 @@ export const weapons: Record<string, Weapon> = {
                 .pop()
         },
     },
-    ["karambit"]: {
+    ["baton"]: {
         type: "meelee",
-        name: "Karambit",
-        reload: 25,
-        frameDelay: 10,
-        range: 75,
-        damage: 5,
-        knockback: 5,
+        name: "Machete",
+        reload: 10,
+        frameDelay: 5,
+        range: 40,
+        damage: 4,
+        knockback: 30,
         sound: "whoosh1",
 
         render(frame, armColor = "rgb(35, 80, 10)", armWidth = 5) {
@@ -92,6 +149,45 @@ export const weapons: Record<string, Weapon> = {
                 .push()
                 .translate(0, 0)
                 .rotate(frameBounce * Math.PI - Math.PI / 1.5)
+                .translate(17.5, 2.5)
+                .fillStyle("black")
+                .push()
+                .translate(7.5, 5)
+                .rotate((Math.PI * frameBounce) / 2)
+                .path()
+                .roundRect(5, -15, 7, 25, 2)
+                .roundRect(5.5, -35, 6, 35, 2)
+                .roundRect(6, -55, 5, 35, 2)
+                .roundRect(5, -55, 7, 5, 2)
+                .fill()
+                .close()
+                .pop()
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .path()
+                .arc(0, 0, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+        },
+    },
+    ["karambit"]: {
+        type: "meelee",
+        name: "Karambit",
+        reload: 25,
+        frameDelay: 10,
+        range: 35,
+        damage: 5,
+        knockback: 10,
+        sound: "whoosh1",
+
+        render(frame, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            const frameBounce = (Math.sin(constrain(frame, 0, 0.5) * 2 * Math.PI) + 1) / 2
+            canvas
+                .push()
+                .translate(0, 0)
+                .rotate(frameBounce * Math.PI - Math.PI / 1.25)
                 .translate(17.5, 2.5)
                 .strokeStyle("black")
                 .lineWidth(2)
@@ -126,7 +222,7 @@ export const weapons: Record<string, Weapon> = {
         recoilY: 3,
         lifetime: 60,
         damage: 2,
-        bulletSpeed: 35,
+        bulletSpeed: 75,
         barrelX: 70,
         barrelY: -4,
         weight: 2,
@@ -463,12 +559,12 @@ export const weapons: Record<string, Weapon> = {
     },
     ["m24"]: {
         name: "M24 SWS",
-        reload: 75,
+        reload: 65,
         recoilX: 5,
         recoilY: 15,
         lifetime: 100,
-        damage: 10,
-        bulletSpeed: 50,
+        damage: 15,
+        bulletSpeed: 85,
         barrelX: 100,
         barrelY: -10,
         weight: 2.5,
@@ -519,6 +615,64 @@ export const weapons: Record<string, Weapon> = {
                 .scale(1, 1)
                 .path()
                 .arc(0, 0, 20 - frameBounce * 12.5, Math.PI / 4 - (Math.PI / 3) * frameBounce, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+        },
+    },
+    ["spas12"]: {
+        name: "SPAS-12",
+        reload: 50,
+        recoilX: 5,
+        recoilY: 7,
+        lifetime: 100,
+        damage: 0,
+        bulletSpeed: 40,
+        barrelX: 50,
+        barrelY: -10,
+        weight: 1.5,
+        fireMode: "semi",
+        frameDelay: 15,
+        sound: "shoot4",
+        type: "gun",
+
+        render(frame: number, armColor = "rgb(35, 80, 10)", armWidth = 5) {
+            const frameBounce = (Math.sin(constrain(frame, 0, 0.5) * 2 * Math.PI) + 1) / 2
+
+            canvas
+                // Arm in back
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .push()
+                .scale(0.7, 0.8)
+                .path()
+                .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
+                .stroke()
+                .close()
+                .pop()
+                // Gun body
+                .fillStyle("black")
+                .path()
+                .roundRect(15, 5, 7.5, 15, 2)
+                .roundRect(20, 5, 10, 7.5, 2)
+                .roundRect(10, 0, 40, 10, [5, 0, 0, 5])
+                .roundRect(40, 0, 40, 12, 2)
+                .roundRect(70, 1, 20, 5, 2)
+                .roundRect(70, 7, 20, 5, 2)
+                .roundRect(70 - frameBounce * 30, 10, 30, 5, 2)
+                .fill()
+                .close()
+                // Arm in front
+                .strokeStyle(armColor)
+                .lineWidth(armWidth)
+                .lineCap("round")
+                .push()
+                .translate(25, 5)
+                .path()
+                .moveTo(-15, 0)
+                .lineTo(5 - frameBounce * 10, 10)
+                .lineTo(50 - frameBounce * 30, 5)
                 .stroke()
                 .close()
                 .pop()

@@ -58,7 +58,7 @@ export const enemies: Record<string, EnemyStats> = {
 
     ["coordinator"]: {
         name: "Coordinator",
-        weapon: ["ar15"],
+        weapon: ["spas12"],
         speed: 5,
         health: {
             head: 20,
@@ -69,7 +69,7 @@ export const enemies: Record<string, EnemyStats> = {
 
     ["runner"]: {
         name: "Runner",
-        weapon: ["autoglock", "karambit"],
+        weapon: ["karambit", "uzi"],
         speed: 10,
         health: {
             head: 10,
@@ -81,7 +81,7 @@ export const enemies: Record<string, EnemyStats> = {
     ["leader"]: {
         name: "Leader",
         // Some sort of superweapon, switchable maybe?
-        weapon: ["ak47", "uzi"],
+        weapon: ["dragunov"],
         speed: 5,
         health: {
             head: 20,

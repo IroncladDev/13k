@@ -3,8 +3,11 @@ import { canvas } from "@/lib/canvas/index"
 import { lineRectCollision, rectCollision } from "@/lib/utils"
 import { Entity } from "./entity"
 import { Enemy } from "./enemy"
+import { Player } from "./player"
+import { zzfx } from "@/lib/zzfx"
+import { sfx } from "@/lib/sfx"
 
-export type BlockType = "a"
+type BlockType = "a"
 
 export const blockMap: Record<string, BlockType> = {
     a: "a",
@@ -37,13 +40,16 @@ export class Block {
 
     collideX() {
         for (const entity of Game.entities) {
+            if (entity.isAgainstWall) entity.isAgainstWall = false
             if (this.isCollidingWith(entity)) {
                 if (entity.xVel > 0) {
                     entity.x = this.x - entity.w
+                    entity.isAgainstWall = true
                 }
 
                 if (entity.xVel < 0) {
                     entity.x = this.x + Game.blockSize
+                    entity.isAgainstWall = true
                 }
             }
         }
@@ -55,7 +61,12 @@ export class Block {
                 if (entity.yVel > 0 && (entity instanceof Enemy ? !entity.dying : !entity.dead)) {
                     entity.y = this.y - entity.h
                     entity.yVel = 0
-                    entity.canJump = true
+                    if (!entity.canJump) {
+                        if (entity instanceof Player) {
+                            zzfx(...sfx["impact"])
+                        }
+                        entity.canJump = true
+                    }
                 }
 
                 if (entity.yVel < 0) {

@@ -1,7 +1,9 @@
 import Game from "@/lib/game"
-import { constrain, normalizeAngle, pointFromAngle } from "@/lib/utils"
+import { levels } from "@/lib/levels"
+import { constrain, dist, normalizeAngle, pointFromAngle } from "@/lib/utils"
 import { WeaponKey, weapons } from "@/lib/weapons"
 import { Bullet } from "./bullet"
+import { Enemy } from "./enemy"
 
 export abstract class Entity {
     x: number
@@ -20,14 +22,16 @@ export abstract class Entity {
     recoilRotation = 0
     fireFrame = 0
     canJump = false
+    isAgainstWall = false
     jumpForce = 12
     dirTo = 1
     dir: -1 | 1 = 1
-    weapon: WeaponKey = "machete"
+    weapon: WeaponKey = "spas12"
     fireCooldown = 0
     dead = false
     weaponRotation = 0
     weaponRotationTo = 0
+    knockback = 0
     abstract health: {
         head: number
         body: number
@@ -83,23 +87,26 @@ export abstract class Entity {
     moveX() {
         if (this.movingDir === 1) {
             this.xVel += this.xAcc
-            this.rotateTo = Math.PI / 32
+            this.rotateTo += this.rotateTo.tween(Math.PI / 32, 5)
         } else if (this.movingDir === -1) {
             this.xVel -= this.xAcc
-            this.rotateTo = -Math.PI / 32
+            this.rotateTo += this.rotateTo.tween(-Math.PI / 32, 5)
         } else {
-            this.rotateTo = 0
+            this.rotateTo += this.rotateTo.tween(0, 5)
         }
 
-        const speedCap = this.speed - (this.wp.type === "meelee" ? 0 : this.wp.weight)
+        const speedCap =
+            (this.speed - (this.wp.type === "meelee" ? 0 : this.wp.weight)) / (this.movingDir !== this.dir ? 2 : 1)
 
         this.xVel += this.xVel.tween(0, 10)
         this.xVel = constrain(this.xVel, -speedCap, speedCap)
 
-        this.x += this.xVel
+        this.x += this.xVel - this.knockback * this.dir
     }
 
     moveY() {
+        if (this.y > levels[Game.level].map.length * Game.blockSize + 500) this.dead = true
+
         if (this.yVel + Game.gravity < Game.maxVelocity) {
             this.yVel += Game.gravity
         }
@@ -119,6 +126,7 @@ export abstract class Entity {
             normalizeAngle(this.weaponRotation, this.weaponRotationTo),
             5,
         )
+        this.knockback += this.knockback.tween(0, 5)
     }
 
     handleBulletCollisions(onCollide?: (bullet: Bullet) => void) {
@@ -147,16 +155,21 @@ export abstract class Entity {
             if (headCollision.colliding || bodyCollision.colliding || legsCollision.colliding) {
                 if (headCollision.colliding) {
                     this.health.head -= bullet.damage
+                    this.knockback = bullet.damage * 2
+                    this.rotateTo += bullet.damage * 10 * (Math.PI / 180) * -this.dir
                     onCollide?.(bullet)
                 }
 
                 if (bodyCollision.colliding) {
                     this.health.body -= bullet.damage
+                    this.knockback = bullet.damage
                     onCollide?.(bullet)
                 }
 
                 if (legsCollision.colliding) {
                     this.health.legs -= bullet.damage
+                    this.knockback = bullet.damage
+                    this.rotateTo += bullet.damage * 5 * (Math.PI / 180) * this.dir
                     onCollide?.(bullet)
                 }
 
@@ -165,9 +178,46 @@ export abstract class Entity {
         }
     }
 
+    notifyClosest(x: number) {
+        setTimeout(() => {
+            const currentThis = Game.entities[Game.entities.indexOf(this)]
+
+            if (!currentThis) return
+
+            const closestEnemy = Game.entities
+                .filter(
+                    e =>
+                        !("hasFired" in e) &&
+                        e !== currentThis &&
+                        !(e as Enemy).hasSurrendered &&
+                        !(e as Enemy).dying &&
+                        !(e as Enemy).hasSeenPlayer,
+                )
+                .sort(
+                    (a, b) =>
+                        a.dist(currentThis.centerX, currentThis.centerY) -
+                        b.dist(currentThis.centerX, currentThis.centerY),
+                )[0]
+
+            if (closestEnemy) {
+                closestEnemy.dir = x < closestEnemy.centerX ? -1 : 1
+            }
+        }, 500)
+    }
+
     jump() {
         this.yVel = -(this.jumpForce - (this.wp.type === "meelee" ? 0 : this.wp.weight))
         this.canJump = false
+    }
+
+    dist(x: number, y: number) {
+        return dist(this.centerX, this.centerY, x, y)
+    }
+
+    gunTip(): [number, number] {
+        return this.wp.type === "meelee"
+            ? [this.centerX, this.centerY]
+            : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
     }
 
     abstract render(): void

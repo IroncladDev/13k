@@ -1,12 +1,13 @@
 import { canvas } from "@/lib/canvas/index"
-import { lineRectCollision, pointFromAngle } from "@/lib/utils"
+import Game from "@/lib/game"
+import { lineRectCollision, pointFromAngle, random } from "@/lib/utils"
 import { WeaponKey } from "@/lib/weapons"
 import { Entity } from "./entity"
 
 export class Bullet {
     x: number
     y: number
-    type: WeaponKey
+    type: WeaponKey | "buckshot"
     r: number
     speed: number
     damage: number
@@ -45,17 +46,38 @@ export class Bullet {
     }
 
     render() {
-        canvas
-            .fillStyle("white")
-            .push()
-            .translate(this.x, this.y)
-            .rotate(this.r)
-            .fillRect(-10, -2, 20, 4)
-            .fillRect((-this.duration * this.speed) / 2, -1, (this.duration * this.speed) / 2, 2)
-            .pop()
+        if (this.type === "buckshot") {
+            canvas.fillStyle("white").roundFillRect(this.x - 2.5, this.y - 2.5, 5, 5)
+        } else if (this.type !== "spas12") {
+            canvas
+                .fillStyle("white")
+                .push()
+                .translate(this.x, this.y)
+                .rotate(this.r)
+                .fillRect(-10, -2, 20, 4)
+                .fillRect((-this.duration * this.speed) / 2, -1, (this.duration * this.speed) / 2, 2)
+                .pop()
+        }
     }
 
     update() {
+        if (this.type === "spas12") {
+            for (let i = 0; i < 10; i++) {
+                Game.bullets.push(
+                    new Bullet({
+                        ...this,
+                        type: "buckshot",
+                        lifetime: 20,
+                        speed: 40,
+                        damage: 1,
+                        r: this.r + random(-Math.PI / 48, Math.PI / 48),
+                    }),
+                )
+            }
+            this.dead = true
+            return
+        }
+
         this.x += this.speed * Math.cos(this.r)
         this.y += this.speed * Math.sin(this.r)
         this.duration++

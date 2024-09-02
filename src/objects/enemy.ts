@@ -2,9 +2,8 @@ import { canvas } from "@/lib/canvas/index"
 import { bodiesCanvas, headsCanvas, shirtColors, skinColors } from "@/lib/enemies/graphics"
 import { enemies, EnemyStats, EnemyType } from "@/lib/enemies/stats"
 import Game from "@/lib/game"
-import { levels } from "@/lib/levels"
 import { sfx } from "@/lib/sfx"
-import { angleTo, dist, lineRectCollision, normalizeToRange, pointFromAngle, pointRectCollision } from "@/lib/utils"
+import { angleTo, dist, normalizeToRange, pointFromAngle, pointRectCollision } from "@/lib/utils"
 import { zzfx } from "@/lib/zzfx"
 import { Entity } from "./entity"
 import { Player } from "./player"
@@ -36,7 +35,6 @@ export class Enemy extends Entity {
         legs: 10,
     }
     player: Player | null = null
-    // Head is still alive
     hasSurrendered = false
     stats: EnemyStats
     dying = false
@@ -45,6 +43,7 @@ export class Enemy extends Entity {
     headRightImage: HTMLCanvasElement
     bodyImage: HTMLCanvasElement
     skinColor: string
+    skinColorDarker: string
 
     constructor(type: keyof typeof enemyMap, x: number, y: number) {
         super(x, y)
@@ -62,6 +61,7 @@ export class Enemy extends Entity {
         const shirtColorIndex = Math.floor(Math.random() * shirtColors.length)
 
         this.skinColor = skinColors[skinColorIndex]
+        this.skinColorDarker = skinColors?.[skinColorIndex + 1] ?? this.skinColor
 
         const hairStyle = Math.floor(Math.random() * 2) * 4
         const headLeft = Math.floor(Math.random() * 3)
@@ -106,10 +106,9 @@ export class Enemy extends Entity {
     }
 
     run() {
-        if (this.y > levels[Game.level].map.length * Game.blockSize) this.dead = true
-
         this.checkHealth()
         this.animateVars()
+
         this.handleBulletCollisions(bullet => {
             this.checkHealth()
 
@@ -127,7 +126,7 @@ export class Enemy extends Entity {
         if (this.dying) {
             this.xVel = this.movingDir = this.movingDirTo = 0
             this.dyingFrame += this.dyingFrame.tween(1, 10)
-            this.baseRotation = (this.dir === 1 ? Math.PI / 2 : -Math.PI / 2) * this.dyingFrame
+            this.baseRotation = (Math.PI / 2) * this.dir * this.dyingFrame
             return
         }
 
@@ -139,11 +138,7 @@ export class Enemy extends Entity {
         }
 
         const player = this.getPlayer()
-
-        const gunTip: [number, number] =
-            this.wp.type === "meelee"
-                ? [0, 0]
-                : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
+        const gunTip = this.gunTip()
 
         // If the enemy can see the player
         if (this.canSeePlayer) {
@@ -152,29 +147,22 @@ export class Enemy extends Entity {
             if (this.wp.type === "meelee") {
                 this.weaponRotation = angleTo(this.centerX, this.centerY, player.centerX, player.centerY)
 
-                const playerDist = dist(this.centerX, this.centerY, player.centerX, player.centerY)
+                const [x, y] = pointFromAngle(this.centerX, this.centerY, this.weaponRotationTo, this.wp.range)
+                const strikeDist = dist(x, y, player.centerX, player.centerY)
 
-                if (this.fireCooldown === 0 && playerDist < this.wp.range) {
+                if (this.fireCooldown === 0 && strikeDist < this.wp.range) {
                     const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx["whoosh1"]).slice()
                     sound[0] = 0.3
                     zzfx(...sound)
 
                     player.health.body -= this.wp.damage
+                    player.knockback = (this.wp.knockback / 2) * player.dir * (player.x < this.x ? 1 : -1)
                     this.fireFrame = 1
                     this.fireCooldown = this.wp.reload
+                    this.notifyClosest(this.x)
                 }
             } else {
-                this.weaponRotation = angleTo(gunTip[0], gunTip[1], player.centerX, player.centerY)
-
-                canvas
-                    .strokeStyle("red")
-                    .lineWidth(2)
-                    .lineCap("round")
-                    .path()
-                    .moveTo(...gunTip)
-                    .lineTo(player.centerX, player.centerY)
-                    .stroke()
-                    .close()
+                this.weaponRotation = angleTo(...gunTip, player.centerX, player.centerY)
 
                 if (this.fireCooldown === 0 && this.canShootPlayer) {
                     const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx["shoot1"]).slice()
@@ -183,6 +171,7 @@ export class Enemy extends Entity {
                     this.fireFrame = 1
 
                     this.shoot(this.weaponRotationTo)
+                    this.notifyClosest(this.x)
                 }
             }
         }
@@ -201,23 +190,24 @@ export class Enemy extends Entity {
                 } else {
                     this.movingDir = 0
                 }
-
-                if (!this.baseLineToPlayer && this.canJump && !this.dying && !this.hasSurrendered) {
-                    this.jump()
-                }
             } else {
-                const playerDist = dist(...gunTip, player.centerX, player.centerY)
+                const playerDist = player.dist(...gunTip)
                 const range = this.wp.lifetime * this.wp.bulletSpeed
 
                 if (playerDist >= range && !this.canShootPlayer) {
                     this.movingDir = player.centerX > this.centerX ? 1 : -1
                 } else if (this.canShootPlayer) {
-                    this.movingDir = 0
+                    if (playerDist < 200) this.movingDir = -(player.centerX > this.centerX ? 1 : -1) as -1 | 1
+                    else this.movingDir = 0
                 }
 
-                if (!this.baseLineToPlayer && this.canJump && !this.dying && !this.hasSurrendered) {
-                    this.jump()
+                if (!this.baseLineToPlayer && this.canJump) {
+                    this.movingDir = 0
                 }
+            }
+
+            if (!this.baseLineToPlayer && this.canJump) {
+                this.jump()
             }
         }
     }
@@ -235,27 +225,28 @@ export class Enemy extends Entity {
             .lineWidth(7.5)
             .lineCap("round")
             .push()
-            .translate(-2.5 * this.baseScaleTo, this.hasSurrendered ? -5 : -25)
-            .scale(this.dirTo, 1)
+            .translate(
+                this.baseScaleTo + Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
+                -25,
+            )
+            .scale(this.dirTo, 1 - Math.sin((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 0.15)
             .rotate(
-                this.hasSurrendered
-                    ? -Math.PI / 4
-                    : this.movingDirTo * ((Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) +
-                          Math.PI / 4,
+                this.movingDirTo * ((Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
             .stroke()
             .close()
             .pop()
+            .strokeStyle(this.skinColorDarker)
             .push()
-            .translate(-2.5 * this.baseScaleTo, this.hasSurrendered ? -5 : -25)
-            .scale(this.dirTo, 1)
+            .translate(
+                this.baseScaleTo - Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
+                -25,
+            )
+            .scale(this.dirTo, 1 + Math.sin((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 0.15)
             .rotate(
-                this.hasSurrendered
-                    ? -Math.PI / 3
-                    : this.movingDirTo * ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) +
-                          Math.PI / 4,
+                this.movingDirTo * ((-Math.sin((Game.frameCount / 5) * speedWeightRatio) * Math.PI) / 4) + Math.PI / 4,
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
@@ -282,7 +273,7 @@ export class Enemy extends Entity {
                 this.hasSurrendered
                     ? Math.PI / 2 + (Math.PI / 6) * -this.dir
                     : this.dying
-                      ? ((this.dyingFrame * -Math.PI) / 2) * this.dir
+                      ? this.dyingFrame * -(Math.PI / 2)
                       : this.weaponRotationTo,
             )
             .scale(1, this.dirTo)
@@ -293,9 +284,10 @@ export class Enemy extends Entity {
         if (this.hasSurrendered) {
             canvas
                 .fillStyle("black")
-                .fillRect(this.centerX - 10, this.y - 50, 5, 40)
+                .roundFillRect(this.centerX - 10, this.y - 50, 5, 40, 5)
+                .roundFillRect(this.centerX - 12.5, this.y - 55, 10, 10, 5)
                 .fillStyle("white")
-                .fillRect(this.centerX - 5, this.y - 45, 30, 20)
+                .roundFillRect(this.centerX - 5, this.y - 45, 30, 20, [0, 5, 5, 0])
         }
     }
 
@@ -315,14 +307,11 @@ export class Enemy extends Entity {
         this.baseLineToPlayer = true
 
         // Determine if a line can be drawn from the gun to the player's center
-        const [x, y] =
-            this.wp.type === "meelee"
-                ? [0, 0]
-                : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
-        const playerDist = dist(x, y, player.centerX, player.centerY)
+        const [x, y] = this.gunTip()
+        const playerDist = player.dist(x, y)
         const [x2, y2] = pointFromAngle(x, y, this.weaponRotationTo, playerDist)
-        const colliding = pointRectCollision(x2, y2, player.x, player.y, player.w, player.h)
-        this.canShootPlayer = this.wp.type === "meelee" ? false : colliding
+        this.canShootPlayer =
+            this.wp.type === "meelee" ? false : pointRectCollision(x2, y2, player.x, player.y, player.w, player.h)
 
         for (const block of Game.blocks) {
             if (block.lineCollision(this.centerX, this.y + 10, player.centerX, player.y + 10).colliding) {

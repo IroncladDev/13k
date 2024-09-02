@@ -1,10 +1,12 @@
 # The Bukele Protocol: MS-13 Takedown
 
 ## Todo
-- dash / duck / dive function for player
-- bullet knockback
-- staggered movement for body / leg shots
 - ammo
+- sounds for walking, jumping, contacting ground, bullet impacts, meelee impacts, dashing
+- UI
+- Shotgun
+- PARTICLES
+- Bullet trails / rendering
 
 ## Controls
 
@@ -24,30 +26,29 @@
     - [x] Sound
 - [ ] Base gameplay
     - [ ] Environment
-        - [ ] Rooms
-        - [ ] Doors
-        - [ ] Walls
+        - [ ] Doors (breakable blocks)
+        - [x] Walls
         - [x] Level Rendering
     - [ ] Entity
-        - [ ] Graphics
+        - [x] Graphics
         - [x] Attacks
         - [x] Movement
         - [x] Collisions
-        - [ ] Bullet collisions
-            - [ ] Headshots
-            - [ ] Legshots
-            - [ ] Bodyshots
-        - [ ] Meelee weapon collisions
+        - [x] Bullet collisions
+            - [x] Headshots
+            - [x] Legshots
+            - [x] Bodyshots
+        - [x] Meelee weapon collisions
         - [ ] Player
             - [x] Controls
-            - [ ] Noise
+            - [ ] Noise (?)
         - [ ] Soldiers (?)
             - [ ] Shoot at enemies 
             - [ ] Collapsing if shot in the leg
-        - [ ] Enemies
-            - [ ] Interactivity
-                - [ ] Noise detection & reaction
-                - [ ] Collapsing (?)
+        - [x] Enemies
+            - [x] Interactivity
+                - [x] Noise detection & reaction
+                - [x] Collapsing (?)
                 - [x] When to surrender (?)
         - [ ] Hostages (?)
             - [ ] Deaths

@@ -3,13 +3,13 @@ import { Block, blockMap } from "@/objects/block"
 import { Enemy, enemyMap } from "@/objects/enemy"
 import { Player } from "@/objects/player"
 
-export interface Level {
+interface Level {
     map: Array<string>
 }
 
 export const levels: Array<Level> = [
     {
-        map: [" 11", "@ 10a r h r h r h r h", "a25"],
+        map: [" 11", "@ 10a r", "a25"],
     },
 ]
 
@@ -23,7 +23,7 @@ export function createLevel() {
 
     for (let i = 0; i < level.map.length; i++) {
         const row = level.map[i]
-        const chunks = row.match(/@|(([a-z]|\s)[0-9]*)/g)
+        const chunks = row.match(/@|(([a-zA-Z]|\s)[0-9]*)/g)
         if (!chunks) continue
 
         let x = 0
