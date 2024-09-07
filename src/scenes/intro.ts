@@ -10,7 +10,7 @@ export const introScene = () => {
         .align("center")
         .baseLine("middle")
         .text(
-            "> El Salvador, 2019\n\nThe country is overrun with crime.\n\nViolent gang members roam the streets, committing various crimes and terrorizing the people without consequence.",
+            "> El Salvador, 2019\n\nThe country is overrun with crime.\n\nNotorious gang members roam the streets, committing various crimes and terrorizing the people without consequence.",
             canvas.canvasWidth / 2,
             50,
             600,

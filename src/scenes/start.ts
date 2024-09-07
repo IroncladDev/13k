@@ -9,7 +9,7 @@ export const startScene = () => {
         .align("center")
         .baseLine("top")
         .font("bold 25px monospace")
-        .text("The Bukele Protocol: MS-13 Takedown", canvas.canvasWidth / 2, 100)
+        .text("Salvadoran Reclamation: MS-13", canvas.canvasWidth / 2, 100)
         .text("- Click to start -", canvas.canvasWidth / 2, 200)
 
     if (Game.clicked) {

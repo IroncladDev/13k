@@ -1,4 +1,4 @@
-# The Bukele Protocol: MS-13 Takedown
+# Salvadoran Reclamation: MS-13
 
 ## Known bugs
 - [ ] Z-index of "[E] to take weapon" text is wrong
