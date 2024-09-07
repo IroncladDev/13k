@@ -1,9 +1,11 @@
+import { canvas } from "@/lib/canvas/index"
 import Game from "@/lib/game"
 import { levels } from "@/lib/levels"
-import { constrain, dist, normalizeAngle, pointFromAngle } from "@/lib/utils"
+import { dist, normalizeToRange, pointAt } from "@/lib/utils"
 import { WeaponKey, weapons } from "@/lib/weapons"
 import { Bullet } from "./bullet"
 import { Enemy } from "./enemy"
+import { Particle } from "./particle"
 
 export abstract class Entity {
     x: number
@@ -26,22 +28,14 @@ export abstract class Entity {
     jumpForce = 12
     dirTo = 1
     dir: -1 | 1 = 1
-    weapon: WeaponKey = "spas12"
+    weapon: WeaponKey = 0
     fireCooldown = 0
     dead = false
-    weaponRotation = 0
-    weaponRotationTo = 0
+    weaponRotation = Math.PI / 2
+    weaponRotationTo = Math.PI / 2
     knockback = 0
-    abstract health: {
-        head: number
-        body: number
-        legs: number
-    }
-    abstract maxHealth: {
-        head: number
-        body: number
-        legs: number
-    }
+    abstract health: [number, number, number]
+    abstract maxHealth: [number, number, number]
 
     constructor(x: number, y: number) {
         this.x = x
@@ -61,9 +55,9 @@ export abstract class Entity {
     }
 
     shoot(r: number) {
-        if (this.wp.type === "meelee") return
+        if (this.wp.type == 1) return
 
-        const [x, y] = pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, r, this.wp.barrelX)
+        const [x, y] = pointAt(this.centerX, this.centerY + this.wp.barrelY, r, this.wp.barrelX)
 
         Game.bullets.push(
             new Bullet({
@@ -71,12 +65,46 @@ export abstract class Entity {
                 x,
                 y,
                 r,
-                speed: this.wp.bulletSpeed,
-                damage: this.wp.damage,
-                lifetime: this.wp.lifetime,
                 entity: this,
             }),
         )
+
+        if (this.wp.shell) {
+            const ejectShell = () => {
+                if (this.wp.type == 1 || !this.wp.shell) return
+
+                const [sx, sy] = pointAt(this.centerX, this.centerY + this.wp.shell.y, r, this.wp.shell.x)
+                Game.particles.push(
+                    new Particle({
+                        type: 0,
+                        ...this.wp.shell,
+                        x: sx,
+                        y: sy,
+                        r,
+                        yVel: Math.random() * 5 - 15,
+                        dir: this.dir,
+                        lifetime: 25,
+                    }),
+                )
+            }
+
+            if (this.wp.shell.delay) setTimeout(ejectShell, this.wp.shell.delay)
+            else ejectShell()
+        }
+
+        for (let i = 2 + Math.floor(Math.random() * 2); i--; ) {
+            Game.particles.push(
+                new Particle({
+                    type: 1,
+                    x,
+                    y,
+                    r: r + Math.random() * (Math.PI / 30) - Math.PI / 60,
+                    lifetime: 0.25 + Math.random() * (0.5 - 0.25),
+                    angle: Math.random() * (Math.PI / 16 - Math.PI / 30) + Math.PI / 30,
+                    bulletSpeed: this.wp.bulletSpeed,
+                }),
+            )
+        }
 
         if (this.movingDir !== 0) this.xVel += Math.cos(r) * -this.wp.recoilX
         this.recoilRotation += (Math.PI / 180) * this.wp.recoilY
@@ -95,13 +123,12 @@ export abstract class Entity {
             this.rotateTo += this.rotateTo.tween(0, 5)
         }
 
-        const speedCap =
-            (this.speed - (this.wp.type === "meelee" ? 0 : this.wp.weight)) / (this.movingDir !== this.dir ? 2 : 1)
+        const speedCap = (this.speed - (this.wp.type == 1 ? 0 : this.wp.weight)) / (this.movingDir !== this.dir ? 2 : 1)
 
         this.xVel += this.xVel.tween(0, 10)
-        this.xVel = constrain(this.xVel, -speedCap, speedCap)
+        this.xVel = Math.min(Math.max(this.xVel, -speedCap), speedCap) - this.knockback
 
-        this.x += this.xVel - this.knockback * this.dir
+        this.x += this.xVel
     }
 
     moveY() {
@@ -111,7 +138,7 @@ export abstract class Entity {
             this.yVel += Game.gravity
         }
 
-        this.yVel = constrain(this.yVel, -this.jumpForce, Game.maxVelocity)
+        this.yVel = Math.min(Math.max(this.yVel, -this.jumpForce), Game.maxVelocity)
         this.y += this.yVel
     }
 
@@ -122,11 +149,13 @@ export abstract class Entity {
         this.fireFrame += this.fireFrame.tween(0, this.wp.frameDelay || 1)
         this.recoilRotation += this.recoilRotation.tween(0, 10)
         this.dirTo += this.dirTo.tween(this.dir, 5)
-        this.weaponRotationTo += this.weaponRotationTo.tween(
-            normalizeAngle(this.weaponRotation, this.weaponRotationTo),
-            5,
-        )
         this.knockback += this.knockback.tween(0, 5)
+
+        const angle = this.weaponRotation % (Math.PI * 2)
+        let delta = angle - (this.weaponRotationTo % (Math.PI * 2))
+        if (delta < -Math.PI) delta += Math.PI * 2
+        if (delta > Math.PI) delta -= Math.PI * 2
+        this.weaponRotationTo += this.weaponRotationTo.tween(this.weaponRotationTo + delta, 5)
     }
 
     handleBulletCollisions(onCollide?: (bullet: Bullet) => void) {
@@ -153,23 +182,38 @@ export abstract class Entity {
             )
 
             if (headCollision.colliding || bodyCollision.colliding || legsCollision.colliding) {
+                const minRot = normalizeToRange(bullet.r)
+                const bulletDir = minRot > -Math.PI / 2 && minRot < Math.PI / 2 ? -1 : 1
+
+                Game.particles.push(
+                    new Particle({
+                        type: 3,
+                        x: bullet.x,
+                        y: bullet.y,
+                        lifetime: 1,
+                        tail: 0,
+                        bulletSpeed: bullet.wp.bulletSpeed,
+                        r: bullet.r,
+                    }),
+                )
+
                 if (headCollision.colliding) {
-                    this.health.head -= bullet.damage
-                    this.knockback = bullet.damage * 2
-                    this.rotateTo += bullet.damage * 10 * (Math.PI / 180) * -this.dir
+                    this.health[0] -= bullet.wp.damage
+                    this.knockback = (bullet.wp.damage / 2) * bulletDir
+                    this.rotateTo += bullet.wp.damage * 10 * (Math.PI / 180) * -this.dir
                     onCollide?.(bullet)
                 }
 
                 if (bodyCollision.colliding) {
-                    this.health.body -= bullet.damage
-                    this.knockback = bullet.damage
+                    this.health[1] -= bullet.wp.damage
+                    this.knockback = (bullet.wp.damage / 4) * bulletDir
                     onCollide?.(bullet)
                 }
 
                 if (legsCollision.colliding) {
-                    this.health.legs -= bullet.damage
-                    this.knockback = bullet.damage
-                    this.rotateTo += bullet.damage * 5 * (Math.PI / 180) * this.dir
+                    this.health[2] -= bullet.wp.damage
+                    this.knockback = (bullet.wp.damage / 4) * bulletDir
+                    this.rotateTo += bullet.wp.damage * 5 * (Math.PI / 180) * this.dir
                     onCollide?.(bullet)
                 }
 
@@ -180,33 +224,29 @@ export abstract class Entity {
 
     notifyClosest(x: number) {
         setTimeout(() => {
-            const currentThis = Game.entities[Game.entities.indexOf(this)]
-
-            if (!currentThis) return
-
             const closestEnemy = Game.entities
                 .filter(
                     e =>
                         !("hasFired" in e) &&
-                        e !== currentThis &&
+                        e !== this &&
                         !(e as Enemy).hasSurrendered &&
                         !(e as Enemy).dying &&
                         !(e as Enemy).hasSeenPlayer,
                 )
-                .sort(
-                    (a, b) =>
-                        a.dist(currentThis.centerX, currentThis.centerY) -
-                        b.dist(currentThis.centerX, currentThis.centerY),
-                )[0]
+                .sort((a, b) => a.dist(this.centerX, this.centerY) - b.dist(this.centerX, this.centerY))[0]
 
-            if (closestEnemy) {
+            if (
+                closestEnemy &&
+                Math.abs(x - closestEnemy.centerX) < canvas.canvasWidth / 2 &&
+                Math.abs(this.centerY - closestEnemy.centerY) < canvas.canvasHeight / 2
+            ) {
                 closestEnemy.dir = x < closestEnemy.centerX ? -1 : 1
             }
         }, 500)
     }
 
     jump() {
-        this.yVel = -(this.jumpForce - (this.wp.type === "meelee" ? 0 : this.wp.weight))
+        this.yVel = -(this.jumpForce - (this.wp.type == 1 ? 0 : this.wp.weight))
         this.canJump = false
     }
 
@@ -215,9 +255,9 @@ export abstract class Entity {
     }
 
     gunTip(): [number, number] {
-        return this.wp.type === "meelee"
+        return this.wp.type == 1
             ? [this.centerX, this.centerY]
-            : pointFromAngle(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
+            : pointAt(this.centerX, this.centerY + this.wp.barrelY, this.weaponRotationTo, this.wp.barrelX)
     }
 
     abstract render(): void

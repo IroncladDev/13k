@@ -32,11 +32,6 @@ export class CanvasPath {
         return this
     }
 
-    ellipse(...args: CtxParams<"ellipse">) {
-        this.engine.context.ellipse(...args)
-        return this
-    }
-
     fill() {
         this.engine.context.fill()
         return this

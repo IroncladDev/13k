@@ -128,8 +128,8 @@ const hairStyles: VariantList = [
     },
 ]
 
-export function drawHeads(canvas: CanvasEngine) {
-    canvas.clearRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
+export const drawHeads = (canvas: CanvasEngine) => {
+    canvas.context.clearRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
     for (let s = 0; s < skinColors.length; s++) {
         canvas.push()
         canvas.translate(0, s * 15)
@@ -142,9 +142,9 @@ export function drawHeads(canvas: CanvasEngine) {
                     .translate(i * 15, 0)
                     .fillStyle(skinColors[s])
                     .roundFillRect(0, 0, 15, 15, 15)
-                canvas.strokeStyle("rgba(0, 0, 0, 0.5)")
+                canvas.strokeStyle("rgba(0,0,0,0.5)")
                 hairStyles[h](canvas)
-                canvas.strokeStyle("rgba(0, 0, 0, 0.4)").lineWidth(0.5)
+                canvas.strokeStyle("rgba(0,0,0,0.4)").lineWidth(0.5)
                 tattoos[i](canvas)
                 canvas.pop()
             }
@@ -154,8 +154,8 @@ export function drawHeads(canvas: CanvasEngine) {
     }
 }
 
-export function drawBodies(canvas: CanvasEngine) {
-    canvas.clearRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
+export const drawBodies = (canvas: CanvasEngine) => {
+    canvas.context.clearRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
     for (let S = 0; S < skinColors.length; S++) {
         canvas.push()
         canvas.translate(0, S * 40)
@@ -175,14 +175,10 @@ export function drawBodies(canvas: CanvasEngine) {
     }
 }
 
-// eslint-disable-next-line
 assortedHeadsCanvas.width = 15 * hairStyles.length * tattoos.length
-// eslint-disable-next-line
 assortedHeadsCanvas.height = 15 * skinColors.length
-// eslint-disable-next-line
 assortedBodiesCanvas.width = 25 * shirts.length * shirtColors.length
-// eslint-disable-next-line
 assortedBodiesCanvas.height = 40 * skinColors.length
 
-export const headsCanvas = new CanvasEngine(assortedHeadsCanvas)
-export const bodiesCanvas = new CanvasEngine(assortedBodiesCanvas)
+export const headsCanvas = new CanvasEngine(assortedHeadsCanvas, { willReadFrequently: true })
+export const bodiesCanvas = new CanvasEngine(assortedBodiesCanvas, { willReadFrequently: true })

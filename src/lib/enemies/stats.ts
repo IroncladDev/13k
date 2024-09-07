@@ -2,93 +2,102 @@ import { WeaponKey } from "../weapons"
 
 export interface EnemyStats {
     name: string
-    weapon: WeaponKey | WeaponKey[]
+    weapon: WeaponKey[]
     speed: number
-    health: {
-        head: number
-        body: number
-        legs: number
-    }
+    description: string
+    bountyAlive: number
+    bountyDead: number
+    /**
+     * 0 = Head
+     * 1 = Body
+     * 2 = Legs
+     */
+    health: [number, number, number]
 }
 
-export const enemies: Record<string, EnemyStats> = {
-    ["recruit"]: {
+/**
+ * Enemy stats
+ * Format is in [index, code] format
+ * [0,r] = recruit
+ * [1,h] = homeboy
+ * [2,c] = clique-leader
+ * [3,p] = palabrero
+ * [4,C] = coordinator
+ * [5,R] = runner
+ * [6,l] = leader
+ * [7,t] = tutorial recruit (only pistol, weaker)
+ */
+export const enemies: Array<EnemyStats> = [
+    {
         name: "Recruit",
-        weapon: ["glock", "machete"],
+        description: "Newly-recruited gang member",
+        weapon: [5, 8],
         speed: 5,
-        health: {
-            head: 5,
-            body: 15,
-            legs: 10,
-        },
+        bountyAlive: 10,
+        bountyDead: 5,
+        health: [5, 15, 10],
     },
-
-    ["homeboy"]: {
+    {
         name: "Homeboy",
-        weapon: ["karambit", "autoglock"],
+        description: "A general gang member",
+        weapon: [10, 6],
         speed: 7,
-        health: {
-            head: 7,
-            body: 20,
-            legs: 15,
-        },
+        bountyAlive: 15,
+        bountyDead: 10,
+        health: [7, 20, 15],
     },
-
-    ["clique-leader"]: {
+    {
         name: "Clique Leader",
-        weapon: ["ak47"],
+        description: "Leads lower-ranking gang members in carrying out organized operations",
+        weapon: [1],
         speed: 7,
-        health: {
-            head: 10,
-            body: 25,
-            legs: 20,
-        },
+        bountyAlive: 25,
+        bountyDead: 15,
+        health: [10, 25, 20],
     },
-
-    ["palabrero"]: {
-        name: "Palabrero",
-        weapon: ["uzi"],
-        speed: 6,
-        health: {
-            head: 15,
-            body: 30,
-            legs: 25,
-        },
-    },
-
-    ["coordinator"]: {
+    {
         name: "Coordinator",
-        weapon: ["spas12"],
+        description: "Organizes programs and enforces rules within the gang",
+        weapon: [7, 9],
+        bountyAlive: 35,
+        bountyDead: 20,
         speed: 5,
-        health: {
-            head: 20,
-            body: 35,
-            legs: 30,
-        },
+        health: [15, 30, 25],
     },
-
-    ["runner"]: {
+    {
+        name: "Palabrero",
+        description: "High-ranking leader and organizer within the gang",
+        weapon: [3],
+        bountyAlive: 100,
+        bountyDead: 60,
+        speed: 6,
+        health: [15, 35, 25],
+    },
+    {
         name: "Runner",
-        weapon: ["karambit", "uzi"],
+        description: "The bridge between the gang leaders and lower-ranking members",
+        weapon: [10, 7],
+        bountyAlive: 125,
+        bountyDead: 75,
         speed: 10,
-        health: {
-            head: 10,
-            body: 25,
-            legs: 20,
-        },
+        health: [10, 25, 20],
     },
-
-    ["leader"]: {
+    {
         name: "Leader",
-        // Some sort of superweapon, switchable maybe?
-        weapon: ["dragunov"],
+        description: "A member of the gang's board of directors overseeing operations over multiple regions",
+        weapon: [4],
         speed: 5,
-        health: {
-            head: 20,
-            body: 35,
-            legs: 30,
-        },
+        bountyAlive: 200,
+        bountyDead: 100,
+        health: [20, 35, 30],
     },
-}
-
-export type EnemyType = keyof typeof enemies
+    {
+        name: "Recruit",
+        description: "Newly-recruited gang member",
+        speed: 4,
+        bountyAlive: 10,
+        bountyDead: 5,
+        health: [5, 10, 10],
+        weapon: [5],
+    },
+]

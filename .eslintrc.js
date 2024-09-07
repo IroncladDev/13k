@@ -9,11 +9,7 @@ module.exports = {
         sourceType: "module",
     },
     plugins: ["unused-imports", "@typescript-eslint", "prettier"],
-    extends: [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:prettier/recommended",
-    ],
+    extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
     rules: {
         indent: "off",
         "prettier/prettier": [
@@ -27,10 +23,7 @@ module.exports = {
         "no-debugger": "off",
         "prefer-destructuring": "off",
         camelcase: "off",
-        "no-use-before-define": [
-            "error",
-            { variables: true, functions: false, classes: true },
-        ],
+        "no-use-before-define": ["error", { variables: true, functions: false, classes: true }],
         "max-classes-per-file": ["error", 1],
         "no-global-assign": ["error", { exceptions: ["Object"] }],
         "no-unneeded-ternary": "error",
@@ -51,30 +44,7 @@ module.exports = {
         "linebreak-style": 0,
         "function-paren-newline": "off",
         "unused-imports/no-unused-imports": "warn",
-        "id-denylist": [
-            "warn",
-            "seed",
-            "direction",
-            "clone",
-            "normalize",
-            "setAttribute",
-            "done",
-            "all",
-            "translate",
-            "scale",
-            "rotate",
-            "position",
-            "rotation",
-            "children",
-            "parent",
-            "remove",
-            "setRotation",
-            "textureRepeat",
-            "load",
-            "image",
-            "width",
-            "height",
-        ],
+        "id-denylist": "off",
         "unused-imports/no-unused-vars": [
             "warn",
             {
@@ -88,13 +58,11 @@ module.exports = {
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "no-shadow": "off",
         "@typescript-eslint/no-shadow": ["error"],
+        "@typescript-eslint/no-non-null-assertion": "off",
     },
     overrides: [
         {
-            files: [
-                "**/__tests__/*.{j,t}s?(x)",
-                "**/tests/unit/**/*.spec.{j,t}s?(x)",
-            ],
+            files: ["**/__tests__/*.{j,t}s?(x)", "**/tests/unit/**/*.spec.{j,t}s?(x)"],
             env: {
                 jest: true,
             },
