@@ -77,8 +77,7 @@ export class Particle {
                     this.a.r - this.a.angle,
                     this.a.r + this.a.angle,
                 )
-                .fill()
-                .close()
+                .close(1)
         }
 
         if (this.a.type == 2) {
@@ -94,8 +93,7 @@ export class Particle {
                 .path()
                 .moveTo(this.a.x, this.a.y)
                 .lineTo(x2, y2)
-                .stroke()
-                .close()
+                .close(0)
 
             if (this.a.lifetime <= 0.01) this.dead = true
         }
@@ -118,9 +116,7 @@ export class Particle {
                 .lineTo(this.a.tail, 0)
                 .lineTo(0, 2)
                 .lineTo(-this.a.tail / 2, 0)
-                .stroke()
-                .fill()
-                .close()
+                .close(2)
                 .pop()
 
             if (this.a.lifetime <= 0.01) this.dead = true

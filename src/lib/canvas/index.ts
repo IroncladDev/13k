@@ -9,9 +9,11 @@ export type CtxParams<T extends keyof CanvasRenderingContext2D> = Parameters<
 export class CanvasEngine {
     context: CanvasRenderingContext2D
     dpr = 4 // window.devicePixelRatio || 1
+    canvas: HTMLCanvasElement
 
     constructor(canvas: HTMLCanvasElement, options?: CanvasRenderingContext2DSettings) {
         this.context = canvas.getContext("2d", options) as CanvasRenderingContext2D
+        this.canvas = canvas
 
         canvas.width = this.context.canvas.width * this.dpr
         canvas.height = this.context.canvas.height * this.dpr
@@ -19,11 +21,11 @@ export class CanvasEngine {
         this.context.scale(this.dpr, this.dpr)
     }
 
-    get canvasWidth() {
+    get width() {
         return this.context.canvas.width / this.dpr
     }
 
-    get canvasHeight() {
+    get height() {
         return this.context.canvas.height / this.dpr
     }
 
@@ -32,7 +34,7 @@ export class CanvasEngine {
         this.context.fillRect(...args)
         return this
     }
-    roundFillRect(...args: CtxParams<"roundRect">) {
+    roundRect(...args: CtxParams<"roundRect">) {
         this.context.beginPath()
         this.context["roundRect"](...args)
         this.context.fill()
@@ -52,10 +54,6 @@ export class CanvasEngine {
     }
     align(alignment: CtxValue<"textAlign">) {
         this.context.textAlign = alignment
-        return this
-    }
-    baseLine(baseLine: CtxValue<"textBaseline">) {
-        this.context.textBaseline = baseLine
         return this
     }
     text(text: string, x: number, y: number, maxWidth?: number) {
@@ -100,10 +98,6 @@ export class CanvasEngine {
         this.context.drawImage(image, sx, sy, sw * this.dpr, sh * this.dpr)
         return this
     }
-    putImageData(imagedata: ImageData, dx: number, dy: number) {
-        this.context.putImageData(imagedata, dx, dy)
-        return this
-    }
 
     // Chainable style methods
     fillStyle(fillStyle: CtxValue<"fillStyle">) {
@@ -114,16 +108,8 @@ export class CanvasEngine {
         this.context.lineCap = lineCap
         return this
     }
-    lineJoin(lineJoin: CtxValue<"lineJoin">) {
-        this.context.lineJoin = lineJoin
-        return this
-    }
     lineWidth(lineWidth: CtxValue<"lineWidth">) {
         this.context.lineWidth = lineWidth
-        return this
-    }
-    lineDashOffset(lineDashOffset: CtxValue<"lineDashOffset">) {
-        this.context.lineDashOffset = lineDashOffset
         return this
     }
     strokeStyle(strokeStyle: CtxValue<"strokeStyle">) {
@@ -150,14 +136,6 @@ export class CanvasEngine {
     }
     rotate(...args: CtxParams<"rotate">) {
         this.context.rotate(...args)
-        return this
-    }
-    fill(...args: CtxParams<"fill">) {
-        this.context.fill(...args)
-        return this
-    }
-    stroke(...args: CtxParams<"stroke">) {
-        this.context.stroke(...args)
         return this
     }
     getImageData(sx: number, sy: number, sw: number, sh: number, settings?: ImageDataSettings) {

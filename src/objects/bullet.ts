@@ -1,4 +1,5 @@
 import { canvas } from "@/lib/canvas/index"
+import { colors } from "@/lib/constants"
 import Game from "@/lib/game"
 import { lineRectCollision, pointAt } from "@/lib/utils"
 import { GunWeapon, WeaponKey, weapons } from "@/lib/weapons"
@@ -34,7 +35,7 @@ export class Bullet {
         const trailSpeed = this.type == 11 ? 10 : isPistol ? 3 : 2
 
         canvas
-            .fillStyle("#fff")
+            .fillStyle(colors.white)
             .strokeStyle("rgb(255,230,160)")
             .lineWidth(1)
             .push()
@@ -46,9 +47,7 @@ export class Bullet {
             .lineTo(-5, w)
             .lineTo((-this.duration * bulletSpeed) / trailSpeed, 0)
             .lineTo(-5, -w)
-            .stroke()
-            .fill()
-            .close()
+            .close(2)
             .pop()
     }
 

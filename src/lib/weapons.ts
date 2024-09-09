@@ -88,7 +88,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 25,
         offset: [0, 0],
 
-        render(_: number, armColor, color) {
+        render: (_: number, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -98,8 +98,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(2, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -113,14 +112,11 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(47.5, 2.5, 20, 10, 2)
                 .roundRect(72.5, 0, 7.5, 7.5, [2, 5, 0, 0])
                 .roundRect(25, 0, 20, 10, [2, 2, 0, 0])
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
-        },
+                .close(0),
     },
     {
         name: "AK-47",
@@ -146,7 +142,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 30,
         offset: [-5, -2.5],
 
-        render(_: number, armColor, color) {
+        render: (_: number, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -156,8 +152,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(2, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -171,25 +166,21 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(40, 5, 50, 5, 2)
                 .roundRect(80, 0, 5, 10, 2)
                 .roundRect(75, 5, 10, 6, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Magazine
                 .strokeStyle(color)
                 .lineWidth(10)
                 .lineCap("square")
                 .path()
                 .arc(65, 10, 20, Math.PI / 1.5, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 // Arm in front
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
-        },
+                .close(0),
     },
     {
         name: "M24 SWS",
@@ -229,8 +220,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(1.8, 0.8)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -248,8 +238,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(37.5, -5, 2.5, 10, 2)
                 .roundRect(45, -5, 2.5, 10, 2)
                 .roundRect(35 - frameBounce * 20, 0, 25, 5, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .strokeStyle(armColor)
                 .lineWidth(5)
@@ -259,8 +248,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(1, 1)
                 .path()
                 .arc(0, 0, 20 - frameBounce * 12.5, Math.PI / 4 - (Math.PI / 3) * frameBounce, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
         },
     },
@@ -303,8 +291,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .path()
                 .moveTo(5 - frameBounce * 10, 10)
                 .lineTo(50 - frameBounce * 30, 5)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -316,8 +303,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(70, 1, 20, 5, 2)
                 .roundRect(70, 7, 20, 5, 2)
                 .roundRect(70 - frameBounce * 30, 10, 30, 5, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .strokeStyle(armColor)
                 .lineWidth(5)
@@ -326,8 +312,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(0.7, 0.8)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
         },
     },
@@ -356,7 +341,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 10,
         offset: [-7.5, -2.5],
 
-        render(_: number, armColor, color) {
+        render: (_: number, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -366,8 +351,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(2, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -380,25 +364,21 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(40, 5, 60, 5, 2)
                 .roundRect(90, 0, 5, 10, 2)
                 .roundRect(75, 5, 10, 6, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Magazine
                 .strokeStyle(color)
                 .lineWidth(12)
                 .lineCap("square")
                 .path()
                 .arc(70, 10, 20, Math.PI / 1.1, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 // Arm in front
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
-        },
+                .close(0),
     },
     {
         name: "Glock 19",
@@ -425,7 +405,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 17,
         offset: [2.5, 2.5],
 
-        render(frame, armColor, color) {
+        render: (frame, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -435,31 +415,27 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(1.5, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
                 .push()
                 .translate(40, 2.5)
                 .rotate(Math.PI / 12)
-                .roundFillRect(0, 0, 7.5, 20, 2)
+                .roundRect(0, 0, 7.5, 20, 2)
                 .pop()
                 .path()
                 .roundRect(35 - frame * 15, 0, 30, 7.5, 2)
                 .roundRect(35, 1, 30, 4, 1)
                 .roundRect(42.5, 2.5, 10, 10, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .push()
                 .scale(1.25, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
-                .stroke()
-                .close()
-                .pop()
-        },
+                .close(0)
+                .pop(),
     },
     {
         name: "Full-auto Glock",
@@ -485,7 +461,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 33,
         offset: [5, -7.5],
 
-        render(frame, armColor, color) {
+        render: (frame, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -495,33 +471,29 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(1.5, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
                 .push()
                 .translate(40, 2.5)
                 .rotate(Math.PI / 12)
-                .roundFillRect(0, 0, 7.5, 20, 2)
-                .roundFillRect(1, 0, 5, 40, 2)
-                .roundFillRect(1, 35, 6, 5, 2)
+                .roundRect(0, 0, 7.5, 20, 2)
+                .roundRect(1, 0, 5, 40, 2)
+                .roundRect(1, 35, 6, 5, 2)
                 .pop()
                 .path()
                 .roundRect(35 - frame * 15, 0, 30, 7.5, 2)
                 .roundRect(35, 1, 30, 4, 1)
                 .roundRect(42.5, 2.5, 10, 10, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .push()
                 .scale(1.25, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 8, Math.PI)
-                .stroke()
-                .close()
-                .pop()
-        },
+                .close(0)
+                .pop(),
     },
     {
         name: "Uzi",
@@ -547,7 +519,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         capacity: 50,
         offset: [10, 0],
 
-        render(_: number, armColor, color) {
+        render: (_: number, armColor, color) =>
             canvas
                 // Arm in back
                 .strokeStyle(armColor)
@@ -557,8 +529,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .scale(1.7, 1)
                 .path()
                 .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 // Gun body
                 .fillStyle(color)
@@ -572,17 +543,14 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(50, 2.5, 10, 4, 2)
                 .roundRect(57.5, 1.5, 20, 6, 2)
                 .roundRect(45, 10, 5, 10, 2)
-                .fill()
-                .close()
+                .close(1)
                 // Arm in front
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(17.5, 5, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
-        },
+                .close(0),
     },
     {
         type: 1,
@@ -610,16 +578,14 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(0, 0, 5, 15, 2)
                 .roundRect(0, 10, 7, 5, 2)
                 .roundRect(0, -45, 8, 50, [2, 5, 2, 2])
-                .fill()
-                .close()
+                .close(1)
                 .pop()
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(0, 0, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
         },
     },
@@ -650,16 +616,14 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .roundRect(5.5, -35, 6, 35, 2)
                 .roundRect(6, -55, 5, 35, 2)
                 .roundRect(5, -55, 7, 5, 2)
-                .fill()
-                .close()
+                .close(1)
                 .pop()
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(0, 0, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
         },
     },
@@ -689,21 +653,18 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
                 .rotate(Math.PI * frameBounce * 4)
                 .path()
                 .arc(0, 0, 3, 0, Math.PI * 2)
-                .stroke()
-                .close()
+                .close(0)
                 .lineWidth(4)
                 .path()
                 .arc(9, 5, 10, Math.PI / 2, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
                 .strokeStyle(armColor)
                 .lineWidth(5)
                 .lineCap("round")
                 .path()
                 .arc(0, 0, 15, Math.PI / 4, Math.PI)
-                .stroke()
-                .close()
+                .close(0)
                 .pop()
         },
     },

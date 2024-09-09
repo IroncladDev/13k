@@ -113,10 +113,10 @@ export abstract class Entity {
     }
 
     moveX() {
-        if (this.movingDir === 1) {
+        if (this.movingDir == 1) {
             this.xVel += this.xAcc
             this.rotateTo += this.rotateTo.tween(Math.PI / 32, 5)
-        } else if (this.movingDir === -1) {
+        } else if (this.movingDir == -1) {
             this.xVel -= this.xAcc
             this.rotateTo += this.rotateTo.tween(-Math.PI / 32, 5)
         } else {
@@ -160,7 +160,7 @@ export abstract class Entity {
 
     handleBulletCollisions(onCollide?: (bullet: Bullet) => void) {
         for (const bullet of Game.bullets) {
-            if (bullet.entity === this) continue
+            if (bullet.entity == this) continue
 
             const headCollision = bullet.withRectCollision(
                 this.x + this.w / 4 + 10 * this.movingDirTo,
@@ -169,13 +169,13 @@ export abstract class Entity {
                 20,
             )
             const bodyCollision = bullet.withRectCollision(
-                this.x + this.w / 8 + 7.5 * this.movingDirTo + (this.dir === -1 ? 5 : 0),
+                this.x + this.w / 8 + 7.5 * this.movingDirTo + (this.dir == -1 ? 5 : 0),
                 this.y + 20,
                 25,
                 40,
             )
             const legsCollision = bullet.withRectCollision(
-                this.x + this.w / 8 + 7.5 * this.movingDirTo + (this.dir === -1 ? 5 : 0),
+                this.x + this.w / 8 + 7.5 * this.movingDirTo + (this.dir == -1 ? 5 : 0),
                 this.y + 60,
                 25,
                 20,
@@ -237,8 +237,8 @@ export abstract class Entity {
 
             if (
                 closestEnemy &&
-                Math.abs(x - closestEnemy.centerX) < canvas.canvasWidth / 2 &&
-                Math.abs(this.centerY - closestEnemy.centerY) < canvas.canvasHeight / 2
+                Math.abs(x - closestEnemy.centerX) < canvas.width / 2 &&
+                Math.abs(this.centerY - closestEnemy.centerY) < canvas.height / 2
             ) {
                 closestEnemy.dir = x < closestEnemy.centerX ? -1 : 1
             }

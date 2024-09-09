@@ -15,6 +15,7 @@ import {
 } from "@/lib/weapons"
 import { Enemy } from "./enemy"
 import { levels } from "@/lib/levels"
+import { colors } from "@/lib/constants"
 
 export class Player extends Entity {
     hasFired = false
@@ -37,6 +38,7 @@ export class Player extends Entity {
     hoverFrame = 0
     timeSinceDamaged = 0
     tutorialEnemy: Enemy | undefined = undefined
+    winTimer = 40
 
     constructor(x: number, y: number) {
         super(x, y)
@@ -49,7 +51,6 @@ export class Player extends Entity {
 
         // Dead & Dying states
         if (this.health.some(h => h <= 0)) {
-            if (isTutorial) Game.tutorialStep = 0
             Game.scene = 4
             this.dead = true
         }
@@ -70,18 +71,19 @@ export class Player extends Entity {
         if (this.dashTime > 0) this.dashTime--
 
         if (
-            this.dashTime === 0 &&
+            this.dashTime == 0 &&
             Game.keysDown("Shift") &&
             this.movingDir != 0 &&
             this.canJump &&
             !this.isAgainstWall
         ) {
             if (isTutorial && Game.tutorialStep == 1) {
-                this.arsenal[0][1] = 5
+                this.arsenal[0][1] = 3
                 Game.tutorialStep = 2
             }
             this.knockback -= 20 * this.movingDir
             this.dashTime = this.dashDelay
+            zzfx(...sfx[12])
         }
 
         if (Game.keysDown("1")) this.currentWeapon = 0
@@ -143,7 +145,6 @@ export class Player extends Entity {
                 Math.atan2(mouseY - this.centerY, mouseX - this.centerX) + (Math.PI / 2) * this.dir,
                 this.wp.barrelY,
             )
-
             this.weaponRotation = Math.atan2(mouseY - y, mouseX - x)
         }
 
@@ -155,11 +156,10 @@ export class Player extends Entity {
 
         if (this.timeSinceDamaged < 250) this.timeSinceDamaged++
         if (this.fireCooldown > 0) this.fireCooldown--
-        if (this.timeSinceDamaged >= 250) {
-            if (this.health[0] < this.maxHealth[0]) this.health[0] += (1 - this.health[0] / this.maxHealth[0]) * 0.1
-            if (this.health[1] < this.maxHealth[1]) this.health[1] += (1 - this.health[1] / this.maxHealth[1]) * 0.1
-            if (this.health[2] < this.maxHealth[2]) this.health[2] += (1 - this.health[2] / this.maxHealth[2]) * 0.1
-        }
+        if (this.timeSinceDamaged >= 250)
+            this.health.forEach((h, i) => {
+                if (h < this.maxHealth[i]) this.health[i] += (1 - h / this.maxHealth[i]) * 0.1
+            })
 
         // Attacks
         if (Game.pressed && this.fireCooldown == 0 && (this.wp.type == 1 || this.wp.isSemi ? !this.hasFired : true)) {
@@ -197,9 +197,10 @@ export class Player extends Entity {
                 const current = this.arsenal[this.currentWeapon as 0 | 1]
                 if (current[1] > 0) {
                     this.fireFrame = 1
-                    zzfx(...sfx[this.wp.sound ?? 0])
+                    zzfx(...sfx[this.wp.sound || 0])
                     this.shoot(this.weaponRotationTo)
                     this.notifyClosest(this.x)
+                    if (!isTutorial || this.tutorialEnemy) Game.shotsFired++
                     current[1]--
                 } else if (!this.hasFired) {
                     zzfx(...sfx[3])
@@ -236,7 +237,7 @@ export class Player extends Entity {
             // Legs
             .lineWidth(7.5)
             .lineCap("round")
-            .strokeStyle("rgb(15,50,5)")
+            .strokeStyle(colors.bodySecondary)
             .push()
             .translate(
                 -2.5 * this.baseScaleTo + Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
@@ -248,10 +249,9 @@ export class Player extends Entity {
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
-            .strokeStyle("rgb(35,70,15)")
+            .strokeStyle(colors.body)
             .push()
             .translate(
                 -2.5 * this.baseScaleTo - Math.cos((Game.frameCount / 5) * speedWeightRatio) * this.movingDirTo * 5,
@@ -264,23 +264,22 @@ export class Player extends Entity {
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
             .push()
             .translate(-this.w / 2, -this.h)
             // Body
             .fillStyle("rgb(45,100,15)")
-            .roundFillRect(10 - 2.5 * this.baseScaleTo, 20, 20, 40, 25)
-            .fillStyle("rgb(35,80,10)")
-            .roundFillRect(7.5 - 2.5 * this.baseScaleTo, 20, 25, 30, [25, 25, 5, 5])
+            .roundRect(10 - 2.5 * this.baseScaleTo, 20, 20, 40, 25)
+            .fillStyle(colors.body)
+            .roundRect(7.5 - 2.5 * this.baseScaleTo, 20, 25, 30, [25, 25, 5, 5])
             // Head
             .fillStyle("#F4DEB3")
-            .roundFillRect(12.5, 2.5, 15, 15, 15)
+            .roundRect(12.5, 2.5, 15, 15, 15)
             // Helmet
-            .fillStyle("rgb(35,80,10)")
-            .roundFillRect(10, 0, 20, 10, [20, 20, 2.5 + this.baseScaleTo * 2.5, 2.5 - this.baseScaleTo * 2.5])
-            .roundFillRect(15 - 5 * this.baseScaleTo, 10, 10, 5, [
+            .fillStyle(colors.body)
+            .roundRect(10, 0, 20, 10, [20, 20, 2.5 + this.baseScaleTo * 2.5, 2.5 - this.baseScaleTo * 2.5])
+            .roundRect(15 - 5 * this.baseScaleTo, 10, 10, 5, [
                 0,
                 0,
                 7.5 - this.baseScaleTo * 2.5,
@@ -288,6 +287,7 @@ export class Player extends Entity {
             ])
             .pop()
             .pop()
+            .lineWidth(2)
 
         if (this.wp.type == 0) {
             const [x, y] = this.gunTip()
@@ -295,16 +295,17 @@ export class Player extends Entity {
             const distToMouse = dist(x, y, Game.mouseX - Game.cameraX, Game.mouseY - Game.cameraY)
             const [mx, my] = pointAt(x, y, this.weaponRotationTo, distToMouse)
             const gunTipToCenter = dist(x, y, this.centerX, this.centerY)
-            const distToCenter = dist(Game.mouseX, Game.mouseY, canvas.canvasWidth / 2, canvas.canvasHeight / 2)
+            const distToCenter = dist(Game.mouseX, Game.mouseY, canvas.width / 2, canvas.height / 2)
 
             canvas
                 .strokeStyle(
                     this.hoveringEnemy
-                        ? `rgba(0,200,150,${0.6 * this.hoverFrame})`
-                        : `rgba(255,255,255,${Math.min(Math.max(Math.PI / 180 / this.recoilRotation / this.wp.recoilY, 0), 1) * 0.2})`,
+                        ? colors.fgui(0.6 * this.hoverFrame)
+                        : colors.dwhite(
+                              Math.min(Math.max(Math.PI / 180 / this.recoilRotation / this.wp.recoilY, 0), 1) * 0.2,
+                          ),
                 )
-                .fillStyle(this.hoveringEnemy ? `rgba(0,200,150,${0.2 * this.hoverFrame})` : "#0000")
-                .lineWidth(2)
+                .fillStyle(this.hoveringEnemy ? colors.fgui(0.2 * this.hoverFrame) : colors.transparent)
                 .path()
                 .moveTo(x, y)
                 .arc(
@@ -322,28 +323,24 @@ export class Player extends Entity {
                     this.weaponRotationTo,
                     this.weaponRotationTo + Math.PI,
                 )
-                .stroke()
-                .fill()
-                .close()
+                .close(2)
         } else {
             const [x, y] = pointAt(this.centerX, this.centerY, this.weaponRotationTo, this.wp.length)
 
             canvas
-                .strokeStyle(`rgba(255,255,255,0.2)`)
-                .lineWidth(2)
+                .strokeStyle(colors.dwhite(0.2))
                 .path()
                 .arc(x, y, this.wp.range, this.weaponRotationTo - Math.PI, this.weaponRotationTo + Math.PI)
-                .stroke()
-                .close()
+                .close(0)
         }
 
         canvas
             .push()
-            .translate(this.centerX - 2.5 * this.baseScaleTo, this.y + 30 - 2.5)
+            .translate(this.centerX - 2.5 * this.baseScaleTo, this.y + 27.5)
             .rotate(this.weaponRotationTo)
             .scale(1, this.dirTo)
             .rotate(0)
-        this.wp.render(this.fireFrame, "rgb(25,60,5)", "#000")
+        this.wp.render(this.fireFrame, colors.bodySecondary, colors.black)
         canvas.pop()
     }
 
@@ -351,120 +348,103 @@ export class Player extends Entity {
         this.weaponNumberTo += this.weaponNumberTo.tween(this.currentWeapon, 5)
 
         canvas
-            .fillStyle(`rgba(0,200,150,${this.currentWeapon == 0 ? 0.4 : 0.2})`)
-            .roundFillRect(10, 10, 100, 70, 10)
-            .fillStyle(`rgba(0,200,150,${this.currentWeapon == 1 ? 0.4 : 0.2})`)
-            .roundFillRect(120, 10, 100, 70, 10)
-            .fillStyle(`rgba(0,200,150,${this.currentWeapon == 2 ? 0.4 : 0.2})`)
-            .roundFillRect(230, 10, 100, 70, 10)
+            .fillStyle(colors.ui(this.currentWeapon == 0 ? 0.6 : 0.4))
+            .roundRect(10, 10, 100, 70, 10)
+            .fillStyle(colors.ui(this.currentWeapon == 1 ? 0.6 : 0.4))
+            .roundRect(120, 10, 100, 70, 10)
+            .fillStyle(colors.ui(this.currentWeapon == 2 ? 0.6 : 0.4))
+            .roundRect(230, 10, 100, 70, 10)
 
         canvas
             .push()
-            .strokeStyle("rgba(0,200,150,0.8)")
-            .fillStyle("red")
+            .strokeStyle(colors.fgui(0.6))
             .lineWidth(3)
             .lineCap("round")
             .translate(this.weaponNumberTo * 110, 0)
             .path()
             .arc(20, 20, 15, Math.PI, Math.PI * 1.5)
-            .stroke()
-            .close()
+            .close(0)
             .path()
             .arc(100, 20, 15, Math.PI * 1.5, Math.PI * 2)
-            .stroke()
-            .close()
+            .close(0)
             .path()
             .arc(100, 70, 15, 0, Math.PI / 2)
-            .stroke()
-            .close()
+            .close(0)
             .path()
             .arc(20, 70, 15, Math.PI / 2, Math.PI)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
 
         const longWeapon = weapons[this.arsenal[0][0]] as GunWeapon
+        const sideWeapon = weapons[this.arsenal[1][0]] as GunWeapon
+        const meeleeWeapon = weapons[this.arsenal[2][0]] as MeeleeWeapon
 
         canvas
             .push()
             .translate(20, 60)
             .rotate(-Math.PI / 6)
             .translate(...longWeapon.offset)
-        longWeapon.render(0, "#0000", "#000")
+        longWeapon.render(0, colors.transparent, colors.black)
         canvas
             .pop()
-            .fillStyle(this.currentWeapon == 0 ? "#fff" : "rgba(0,200,150,0.4)")
-            .text(longWeapon.name, 60, 50)
-            .font("12px monospace")
-            .text("[1]", 25, 25)
-            .text("" + this.arsenal[0][1], 95, 70)
-            .roundFillRect(80, 63, 4, 12, [5, 5, 1, 1])
-
-        const sideWeapon = weapons[this.arsenal[1][0]] as GunWeapon
-
-        canvas
             .push()
             .translate(120, 60)
             .rotate(-Math.PI / 6)
             .translate(...sideWeapon.offset)
-        sideWeapon.render(0, "#0000", "#000")
+        sideWeapon.render(0, colors.transparent, colors.black)
         canvas
             .pop()
-            .fillStyle(this.currentWeapon == 1 ? "#fff" : "rgba(0,200,150,0.4)")
-            .text(sideWeapon.name, 170, 50)
-            .font("12px monospace")
-            .text("[2]", 135, 25)
-            .text("" + this.arsenal[1][1], 205, 70)
-            .roundFillRect(190, 63, 4, 12, [5, 5, 1, 1])
-
-        const meeleeWeapon = weapons[this.arsenal[2][0]] as MeeleeWeapon
-
-        canvas
             .push()
             .translate(240, 60)
             .rotate(-Math.PI / 6 + Math.PI / 2)
             .translate(...meeleeWeapon.offset)
-        meeleeWeapon.render(0, "#0000", "#000")
+        meeleeWeapon.render(0, colors.transparent, colors.black)
+
         canvas
+            .font("12px monospace")
             .pop()
-            .fillStyle(this.currentWeapon == 2 ? "#fff" : "rgba(0,200,150,0.4)")
-            .text(meeleeWeapon.name, 280, 50)
-            .text("[3]", 245, 25)
+            .fillStyle(colors.white)
+            .text(longWeapon.name, 60, 40)
+            .text(sideWeapon.name, 170, 40)
+            .text(meeleeWeapon.name, 280, 40)
+            .font("10px monospace")
+            .text("[1]", 25, 20)
+            .text("[2]", 135, 20)
+            .text("[3]", 245, 20)
+            .text("" + this.arsenal[0][1], 95, 65)
+            .text("" + this.arsenal[1][1], 205, 65)
 
         // Health indicator
         canvas
             .fillStyle(
-                `rgba(${(1 - this.health[0] / this.maxHealth[0]) * 200},${(this.health[0] / this.maxHealth[0]) * 200},${(this.health[0] / this.maxHealth[0]) * 100 + 50},0.4)`,
+                `rgba(${(1 - this.health[0] / this.maxHealth[0]) * 125},${(this.health[0] / this.maxHealth[0]) * 125},75,0.6)`,
             )
-            .roundFillRect(10, canvas.canvasHeight - 130, 100, 25, [10, 10, 0, 0])
-            .roundFillRect(35, canvas.canvasHeight - 125, 20, 20, 20)
+            .roundRect(10, canvas.height - 130, 100, 25, [10, 10, 0, 0])
+            .roundRect(35, canvas.height - 125, 20, 20, 20)
             .fillStyle(
-                `rgba(${(1 - this.health[1] / this.maxHealth[1]) * 200},${(this.health[1] / this.maxHealth[1]) * 200},${(this.health[1] / this.maxHealth[1]) * 100 + 50},0.4)`,
+                `rgba(${(1 - this.health[1] / this.maxHealth[1]) * 125},${(this.health[1] / this.maxHealth[1]) * 125},75,0.6)`,
             )
-            .roundFillRect(10, canvas.canvasHeight - 105, 100, 45, 0)
+            .roundRect(10, canvas.height - 105, 100, 45, 0)
             .path()
-            .roundRect(20, canvas.canvasHeight - 100, 50, 20, [10, 10, 0, 0])
-            .roundRect(20, canvas.canvasHeight - 80, 7.5, 20, [0, 0, 10, 10])
-            .roundRect(62.5, canvas.canvasHeight - 80, 7.5, 20, [0, 0, 10, 10])
-            .roundRect(32.5, canvas.canvasHeight - 80, 25, 20, 0)
-            .fill()
-            .close()
+            .roundRect(20, canvas.height - 100, 50, 20, [10, 10, 0, 0])
+            .roundRect(20, canvas.height - 80, 7.5, 20, [0, 0, 10, 10])
+            .roundRect(62.5, canvas.height - 80, 7.5, 20, [0, 0, 10, 10])
+            .roundRect(32.5, canvas.height - 80, 25, 20, 0)
+            .close(1)
             .fillStyle(
-                `rgba(${(1 - this.health[2] / this.maxHealth[2]) * 200},${(this.health[2] / this.maxHealth[2]) * 200},${(this.health[2] / this.maxHealth[2]) * 100 + 50},0.4)`,
+                `rgba(${(1 - this.health[2] / this.maxHealth[2]) * 125},${(this.health[2] / this.maxHealth[2]) * 125},75,0.6)`,
             )
-            .roundFillRect(10, canvas.canvasHeight - 60, 100, 50, [0, 0, 10, 10])
+            .roundRect(10, canvas.height - 60, 100, 50, [0, 0, 10, 10])
             .path()
-            .roundRect(32.5, canvas.canvasHeight - 60, 25, 10, 0)
-            .roundRect(32.5, canvas.canvasHeight - 50, 10, 35, [0, 0, 10, 10])
-            .roundRect(47.5, canvas.canvasHeight - 50, 10, 35, [0, 0, 10, 10])
-            .fill()
-            .close()
-            .fillStyle("#fff")
+            .roundRect(32.5, canvas.height - 60, 25, 10, 0)
+            .roundRect(32.5, canvas.height - 50, 10, 35, [0, 0, 10, 10])
+            .roundRect(47.5, canvas.height - 50, 10, 35, [0, 0, 10, 10])
+            .close(1)
+            .fillStyle(colors.white)
             .align("right")
-            .baseLine("middle")
-            .text("- " + ((this.health[0] / this.maxHealth[0]) * 100).toFixed(0) + "%", 105, canvas.canvasHeight - 115)
-            .text(((this.health[1] / this.maxHealth[1]) * 100).toFixed(0) + "%", 105, canvas.canvasHeight - 75)
-            .text("- " + ((this.health[2] / this.maxHealth[2]) * 100).toFixed(0) + "%", 105, canvas.canvasHeight - 35)
+            .text("- " + ((this.health[0] / this.maxHealth[0]) * 100).toFixed(0) + "%", 105, canvas.height - 120)
+            .text(((this.health[1] / this.maxHealth[1]) * 100).toFixed(0) + "%", 105, canvas.height - 80)
+            .text("- " + ((this.health[2] / this.maxHealth[2]) * 100).toFixed(0) + "%", 105, canvas.height - 40)
 
         const hoveredEnemy = Game.entities.find(e => e instanceof Enemy && e.isHovered) as Enemy | undefined
 
@@ -472,29 +452,25 @@ export class Player extends Entity {
             this.hoveringEnemy = hoveredEnemy
             this.hoverFrame += this.hoverFrame.tween(1, 10)
             canvas
-                .fillStyle(`rgba(0,200,150,${0.3 * this.hoverFrame})`)
-                .roundFillRect(canvas.canvasWidth - 160, 10, 150, 140, 10)
-                .fillStyle("#fff")
+                .fillStyle(colors.ui(0.8 * this.hoverFrame))
+                .roundRect(canvas.width - 160, 10, 150, 100, 10)
+                .fillStyle(colors.white)
                 .align("left")
-                .baseLine("top")
                 .font("12px monospace")
-                .text(hoveredEnemy.name, canvas.canvasWidth - 150, 20)
-                .fillStyle("#fff7")
-                .roundFillRect(canvas.canvasWidth - 150, 32, canvas.context.measureText(hoveredEnemy.name).width, 2, 10)
-                .fillStyle("#fff")
+                .text(hoveredEnemy.name, canvas.width - 150, 20)
+                .fillStyle(colors.dwhite(0.7))
+                .roundRect(canvas.width - 150, 32, canvas.context.measureText(hoveredEnemy.name).width, 2, 10)
+                .fillStyle(colors.white)
                 .font("10px monospace")
-                .text("Bounty:", canvas.canvasWidth - 150, 40)
-                .text("Rank: " + hoveredEnemy.stats.name, canvas.canvasWidth - 150, 80)
+                .text("Rank: " + hoveredEnemy.stats.name, canvas.width - 150, 40)
                 .text(
                     "Weapon: " + (hoveredEnemy.weaponTaken ? "--" : weapons[hoveredEnemy.weapon].name),
-                    canvas.canvasWidth - 150,
-                    135,
+                    canvas.width - 150,
+                    95,
                 )
                 .font("8px monospace")
-                .fillStyle("#fffa")
-                .text("Alive: $" + hoveredEnemy.stats.bountyAlive, canvas.canvasWidth - 145, 55)
-                .text("Dead: $" + hoveredEnemy.stats.bountyDead, canvas.canvasWidth - 145, 65)
-                .text(hoveredEnemy.stats.description, canvas.canvasWidth - 145, 95, 135)
+                .fillStyle(colors.dwhite(0.7))
+                .text(hoveredEnemy.stats.description, canvas.width - 145, 55, 130)
         } else {
             this.hoverFrame += this.hoverFrame.tween(0, 10)
             this.hoveringEnemy = undefined
@@ -502,7 +478,7 @@ export class Player extends Entity {
 
         if (Game.level == 0) {
             let tutorialMessage =
-                "Gang members taken alive have a higher bounty than enemies who are killed. Press [E] to complete tutorial"
+                "Gang members taken alive have a higher bounty than enemies who are killed. [E] to complete tutorial"
 
             if (Game.tutorialStep == 0) {
                 tutorialMessage = "WASD / Arrow Keys to move"
@@ -511,7 +487,8 @@ export class Player extends Entity {
             } else if (Game.tutorialStep == 2) {
                 tutorialMessage = "Mouse to aim, Click / Hold mouse to attack"
             } else if (Game.tutorialStep == 3) {
-                tutorialMessage = "[1][2][3] to switch weapons"
+                tutorialMessage =
+                    "[1][2][3] to switch weapons. You are limited to one long weapon, one short weapon, and one meelee weapon"
             } else if (Game.tutorialStep == 4) {
                 tutorialMessage = "Hover over enemies to see their stats, rank, weapon, and bounty"
             } else if (Game.tutorialStep == 5) {
@@ -522,41 +499,50 @@ export class Player extends Entity {
             }
 
             canvas
-                .fillStyle("rgba(0,200,150,0.4)")
-                .roundFillRect(canvas.canvasWidth - 310, canvas.canvasHeight - 90, 300, 80, 10)
-                .fillStyle("#fff")
+                .fillStyle(colors.ui())
+                .roundRect(canvas.width - 310, canvas.height - 90, 300, 80, 10)
+                .fillStyle(colors.white)
                 .font("12px monospace")
                 .align("left")
-                .baseLine("top")
-                .text(
-                    "Tutorial (" + (Game.tutorialStep + 1) + "/8)",
-                    canvas.canvasWidth - 300,
-                    canvas.canvasHeight - 80,
-                )
+                .text("Tutorial (" + (Game.tutorialStep + 1) + "/8)", canvas.width - 300, canvas.height - 80)
                 .font("10px monospace")
-                .fillStyle("#fffa")
-                .text(tutorialMessage, canvas.canvasWidth - 300, canvas.canvasHeight - 65, 280)
+                .fillStyle(colors.dwhite(0.7))
+                .text(tutorialMessage, canvas.width - 300, canvas.height - 65, 280)
         } else {
             const threatCount = Game.entities.filter(
                 e => e instanceof Enemy && !e.dying && !e.hasSurrendered && !e.dead,
             ).length
             canvas
-                .fillStyle("#fff")
+                .fillStyle(colors.white)
                 .align("right")
-                .baseLine("top")
                 .font("bold 15px monospace")
-                .text(levels[Game.level].name, canvas.canvasWidth - 10, canvas.canvasHeight - 50)
+                .text(`Level ${Game.level}: ${levels[Game.level].name}`, canvas.width - 10, canvas.height - 50)
                 .font("12px monospace")
                 .text(
                     threatCount + " Active Threat" + (threatCount == 1 ? "" : "s"),
-                    canvas.canvasWidth - 10,
-                    canvas.canvasHeight - 25,
+                    canvas.width - 10,
+                    canvas.height - 25,
                 )
 
-            if (threatCount == 0 && !Game.pressed) {
+            if (threatCount == 0) {
+                this.winTimer--
+                Game.frameRate = 20
+                canvas
+                    .fillStyle("#000a")
+                    .fillRect(0, 0, canvas.width, canvas.height)
+                    .font("bold 20px monospace")
+                    .fillStyle(colors.white)
+                    .align("center")
+                    .text("Mission Accomplished", canvas.width / 2, canvas.height / 2)
+            }
+
+            if (this.winTimer <= 0) {
+                Game.frameRate = 60
                 if (Game.level == levels.length - 1) {
                     Game.scene = 5
                 } else {
+                    levels[Game.level].completed = true
+                    levels[Game.level].timeEnded = Date.now()
                     Game.scene = 3
                 }
             }
@@ -564,7 +550,7 @@ export class Player extends Entity {
 
         // Cursor
         canvas
-            .strokeStyle(this.hoveringEnemy ? "rgba(0,200,150,0.6)" : "rgba(255,255,255,0.5)")
+            .strokeStyle(colors.fgui(this.hoveringEnemy ? 0.6 : 0.5))
             .lineWidth(2)
             .lineCap("round")
             .push()
@@ -579,8 +565,7 @@ export class Player extends Entity {
             .lineTo(-20, 0)
             .moveTo(0, -10)
             .lineTo(0, -20)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
     }
 }

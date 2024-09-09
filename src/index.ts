@@ -1,12 +1,12 @@
 import Game from "./lib/game"
-import { drawBodies, drawHeads, headsCanvas, bodiesCanvas } from "./lib/enemies/graphics"
-import { startScene } from "./scenes/start"
+import { startScene } from "./scenes/title"
 import { levelsScene } from "./scenes/levels"
-import { missionSuccessScene } from "./scenes/success"
-import { missionFailureScene } from "./scenes/failure"
+import { missionSuccessScene } from "./scenes/mission-success"
+import { missionFailureScene } from "./scenes/mission-failed"
 import { winScene } from "./scenes/win"
 import { gameScene } from "./scenes/game"
-import { introScene } from "./scenes/intro"
+import { introScene } from "./scenes/cutscene"
+import { canvas } from "./lib/canvas/index"
 
 declare global {
     interface Number {
@@ -18,24 +18,24 @@ Number.prototype.tween = function (to: number, divisor: number): number {
     return Math.fround((to - (this as number)) / divisor)
 }
 
-drawBodies(bodiesCanvas)
-drawHeads(headsCanvas)
-
-const interval = 1000 / 60
 let previousTime = 0
 
 Game.initControls()
 
 // Game loop
-;(function draw(currentTime: number) {
+function draw(currentTime: number) {
     const delta = currentTime - previousTime
 
     // Redraw frame at 60fps
-    if (delta >= interval) {
-        previousTime = currentTime - (delta % interval)
+    if (delta >= 1000 / Game.frameRate) {
+        previousTime = currentTime - (delta % (1000 / Game.frameRate))
         Game.frameCount++
 
         c2d.style.cursor = "default"
+
+        canvas.font("15px monospace").align("center")
+        canvas.context.textBaseline = "top"
+        canvas.context.lineJoin = "round"
 
         if (Game.scene == 0) {
             startScene()
@@ -65,4 +65,6 @@ Game.initControls()
     }
 
     requestAnimationFrame(draw)
-})(0)
+}
+
+draw(0)

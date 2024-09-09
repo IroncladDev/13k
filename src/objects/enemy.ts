@@ -1,4 +1,5 @@
 import { canvas } from "@/lib/canvas/index"
+import { colors } from "@/lib/constants"
 import { bodiesCanvas, headsCanvas, shirtColors, skinColors } from "@/lib/enemies/graphics"
 import { enemies, EnemyStats } from "@/lib/enemies/stats"
 import Game from "@/lib/game"
@@ -64,7 +65,7 @@ export class Enemy extends Entity {
         const shirtColorIndex = Math.floor(Math.random() * shirtColors.length)
 
         this.skinColor = skinColors[skinColorIndex]
-        this.skinColorDarker = skinColors?.[skinColorIndex + 1] ?? this.skinColor
+        this.skinColorDarker = skinColors?.[skinColorIndex + 1] || this.skinColor
 
         const hairStyle = Math.floor(Math.random() * 2) * 4
         const headLeft = Math.floor(Math.random() * 3)
@@ -96,7 +97,7 @@ export class Enemy extends Entity {
 
     checkHealth() {
         if (this.health[1] <= 0) {
-            if (this.health[1] < -5) {
+            if (this.health[1] < -10) {
                 this.dying = true
             } else {
                 this.hasSurrendered = true
@@ -119,6 +120,10 @@ export class Enemy extends Entity {
 
         if (!this.dying)
             this.handleBulletCollisions(bullet => {
+                if (bullet.entity instanceof Player) {
+                    Game.hits++
+                }
+
                 this.checkHealth()
 
                 if (!this.hasSurrendered && !this.dying) {
@@ -151,21 +156,25 @@ export class Enemy extends Entity {
             this.isHovered = false
         }
 
-        const player = this.player ?? (Game.entities.find(e => e instanceof Player) as Player)
+        const player = this.player || (Game.entities.find(e => e instanceof Player) as Player)
 
         if (this.hasSurrendered || this.dying) {
             if (
                 dist(this.centerX, this.centerY, player.centerX, player.centerY) < Game.blockSize / 2 &&
                 !this.weaponTaken
             ) {
-                if (player.arsenal[2][0] !== this.weapon) {
+                if (player.arsenal[2][0] != this.weapon) {
                     let text = ""
 
                     if (this.wp.type == 0 && this.wp.isPistol) text = "[E] take ammo"
-                    else if (player.arsenal[0][0] !== this.weapon) text = "[E] take weapon"
-                    else if (player.arsenal[0][0] === this.weapon) text = "[E] take ammo"
+                    else if (player.arsenal[0][0] != this.weapon) text = "[E] take weapon"
+                    else if (player.arsenal[0][0] == this.weapon) text = "[E] take ammo"
 
-                    canvas.fillStyle("#fff").align("center").font("12px monospace").text(text, this.centerX, this.y)
+                    canvas
+                        .fillStyle(colors.white)
+                        .align("center")
+                        .font("12px monospace")
+                        .text(text, this.centerX, this.y)
 
                     if (player.arsenal[1][0] !== this.weapon && this.wp.type == 0 && this.wp.isPistol) {
                         canvas.text("[R] take weapon", this.centerX, this.y + 15)
@@ -193,7 +202,7 @@ export class Enemy extends Entity {
                                 player.arsenal[0][1] = (this.wp as GunWeapon).capacity
                                 player.currentWeapon = 0
                             }
-                        } else if (player.arsenal[0][0] === this.weapon) {
+                        } else if (player.arsenal[0][0] == this.weapon) {
                             player.arsenal[0][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 0
                         }
@@ -215,7 +224,7 @@ export class Enemy extends Entity {
 
         // Determine if a line can be drawn from the enemy's facing direction to the player
         this.canSeePlayer =
-            (this.dir === 1 && player.centerX > this.centerX) || (this.dir === -1 && player.centerX < this.centerX)
+            (this.dir == 1 && player.centerX > this.centerX) || (this.dir == -1 && player.centerX < this.centerX)
 
         // Determine if a line from the base of the enemy to the player can be drawn
         // Used for deciding whether to jump or not
@@ -264,7 +273,7 @@ export class Enemy extends Entity {
                 const strikeY = Math.min(Math.max(y, player.y), player.y + player.h)
                 const strikeDist = dist(x, y, strikeX, strikeY)
 
-                if (this.fireCooldown === 0 && strikeDist < this.wp.range) {
+                if (this.fireCooldown == 0 && strikeDist < this.wp.range) {
                     const sound = (sfx[4] as Array<number | undefined>).slice()
                     sound[0] = 0.3
                     zzfx(...sound)
@@ -279,7 +288,7 @@ export class Enemy extends Entity {
             } else {
                 this.weaponRotation = Math.atan2(player.centerY - gy, player.centerX - gx)
 
-                if (this.fireCooldown === 0 && this.canShootPlayer) {
+                if (this.fireCooldown == 0 && this.canShootPlayer) {
                     const sound = (this.wp.sound ? sfx[this.wp.sound] : sfx[0]).slice()
                     sound[0] = 0.3
                     zzfx(...sound)
@@ -349,8 +358,7 @@ export class Enemy extends Entity {
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
             .strokeStyle(this.skinColorDarker)
             .push()
@@ -364,15 +372,14 @@ export class Enemy extends Entity {
             )
             .path()
             .arc(0, 15, 15, -Math.PI / 2, 0)
-            .stroke()
-            .close()
+            .close(0)
             .pop()
             .push()
             .translate(0, -this.h)
             .scale(this.dir, 1)
             .drawImage(this.bodyImage, -15, 20, 25 / canvas.dpr, 40 / canvas.dpr)
             .drawImage(
-                this.dir === 1 ? this.headRightImage : this.headLeftImage,
+                this.dir == 1 ? this.headRightImage : this.headLeftImage,
                 -7.5 + (this.hasSurrendered ? 7.5 : 0),
                 2.5 + (this.hasSurrendered ? 5 : 0),
                 15 / canvas.dpr,
@@ -392,16 +399,16 @@ export class Enemy extends Entity {
             )
             .scale(1, this.dirTo)
             .rotate(0)
-        this.wp.render(this.fireFrame, this.skinColor, this.weaponTaken ? "#0000" : "#000")
+        this.wp.render(this.fireFrame, this.skinColor, this.weaponTaken ? colors.transparent : colors.black)
         canvas.pop().pop()
 
         if (this.hasSurrendered) {
             canvas
-                .fillStyle("#000")
-                .roundFillRect(this.centerX - 10, this.y - 50, 5, 40, 5)
-                .roundFillRect(this.centerX - 12.5, this.y - 55, 10, 10, 5)
-                .fillStyle("#fff")
-                .roundFillRect(this.centerX - 5, this.y - 45, 30, 20, [0, 5, 5, 0])
+                .fillStyle(colors.black)
+                .roundRect(this.centerX - 10, this.y - 50, 5, 40, 5)
+                .roundRect(this.centerX - 12.5, this.y - 55, 10, 10, 5)
+                .fillStyle(colors.white)
+                .roundRect(this.centerX - 5, this.y - 45, 30, 20, [0, 5, 5, 0])
         }
     }
 }

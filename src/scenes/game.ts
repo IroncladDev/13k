@@ -1,5 +1,7 @@
+import { backgrounds, foregrounds } from "@/lib/backgrounds"
 import { canvas } from "@/lib/canvas/index"
 import Game from "@/lib/game"
+import { levels } from "@/lib/levels"
 import { Player } from "@/objects/player"
 
 export const gameScene = () => {
@@ -11,20 +13,28 @@ export const gameScene = () => {
 
     if (!player) return
 
-    Game.cameraX += Game.cameraX.tween(canvas.canvasWidth / 2 - player.x - player.w / 2, 5)
-    Game.cameraY += Game.cameraY.tween(canvas.canvasHeight / 2 - player.y - player.h / 2, 5)
+    Game.cameraX += Game.cameraX.tween(canvas.width / 2 - player.x - player.w / 2, 5)
+    Game.cameraY += Game.cameraY.tween(canvas.height / 2 - player.y - player.h / 2, 5)
 
     canvas
-        .fillStyle("rgb(15,35,75)")
-        .fillRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
-        // Default font settings
-        .font("15px monospace")
-        .align("center")
-        .baseLine("middle")
+        .drawImage(
+            backgrounds[levels[Game.level].background[0]],
+            0,
+            0,
+            canvas.width / canvas.dpr,
+            canvas.height / canvas.dpr,
+        )
+        .drawImage(
+            foregrounds[levels[Game.level].background[1]],
+            0,
+            0,
+            canvas.width / canvas.dpr,
+            canvas.height / canvas.dpr,
+        )
 
     canvas.push()
-    canvas.translate(canvas.canvasWidth / 2, canvas.canvasHeight / 2)
-    canvas.translate(-canvas.canvasWidth / 2 + Game.cameraX, -canvas.canvasHeight / 2 + Game.cameraY)
+    canvas.translate(canvas.width / 2, canvas.height / 2)
+    canvas.translate(-canvas.width / 2 + Game.cameraX, -canvas.height / 2 + Game.cameraY)
 
     Game.bullets = Game.bullets.filter(bullet => !bullet.dead)
     Game.particles = Game.particles.filter(particle => !particle.dead)

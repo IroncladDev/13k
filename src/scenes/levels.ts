@@ -1,17 +1,27 @@
+import { backgrounds, foregrounds } from "@/lib/backgrounds"
 import { canvas } from "@/lib/canvas/index"
+import { colors } from "@/lib/constants"
 import Game from "@/lib/game"
 import { createLevel, levels } from "@/lib/levels"
-import { dist } from "@/lib/utils"
+import { dist, pointRect } from "@/lib/utils"
 
 export const levelsScene = () => {
     canvas
-        .fillStyle("rgb(15,35,75)")
-        .fillRect(0, 0, canvas.canvasWidth, canvas.canvasHeight)
+        // Background
+        .drawImage(backgrounds[1], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
+        .drawImage(foregrounds[0], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
+        .fillStyle(colors.white)
+        .align("center")
+        .font("bold 25px monospace")
+        .text("Level Select", canvas.width / 2, 50)
+
+    // Roughly-drawn shape of El Salvador
+    canvas
         .strokeStyle("white")
         .lineWidth(2)
-        .fillStyle("rgba(0,200,150,0.4)")
+        .fillStyle(colors.ui(0.6))
         .push()
-        .translate(canvas.canvasWidth / 2, canvas.canvasHeight / 2)
+        .translate(canvas.width / 2, canvas.height / 2)
         .scale(1.25, 1.25)
         .translate(-295, -145)
         .path()
@@ -41,61 +51,114 @@ export const levelsScene = () => {
         .lineTo(240, 240)
         .lineTo(100, 230)
         .lineTo(0, 150)
-        .stroke()
-        .fill()
-        .close()
+        .close(2)
         .pop()
+
+    const currentLevel = levels.filter(l => l.completed).length
 
     const points = levels.map(l => l.position)
 
     const path = canvas
-        .strokeStyle("#fff6")
+        .strokeStyle(colors.dwhite(0.4))
         .lineWidth(4)
-        .lineJoin("round")
         .lineCap("round")
         .path()
         .moveTo(points[0][0], points[0][1])
     points.forEach(p => path.lineTo(p[0], p[1]))
-    path.stroke().close()
-    const progress = canvas.strokeStyle("#0fc6").path().moveTo(points[0][0], points[0][1])
-    points.slice(0, Game.level + 2).forEach(p => progress.lineTo(p[0], p[1]))
-    progress.stroke().close()
+    path.close(0)
+    const progress = canvas.strokeStyle(colors.ui(0.4)).path().moveTo(points[0][0], points[0][1])
+    points.slice(0, currentLevel + 1).forEach(p => progress.lineTo(p[0], p[1]))
+    progress.close(0)
 
     for (let i = 0; i < levels.length; i++) {
         const level = levels[i]
         canvas
-            .fillStyle(Game.level + 1 > i ? "#0fc8" : Game.level + 1 == i ? "#fff" : "#fff3")
+            .fillStyle(
+                (currentLevel == 1 && i == 0 && levels[0].stars == 0) || currentLevel == i
+                    ? colors.white
+                    : level.completed
+                      ? colors.fgui(0.5)
+                      : colors.dwhite(0.3),
+            )
             .path()
             .arc(...level.position, 10, 0, Math.PI * 2)
-            .fill()
-            .close()
+            .close(1)
 
-        if (Game.level + 1 == i) {
+        if (currentLevel == i || (currentLevel == 1 && i == 0 && levels[0].stars == 0)) {
             canvas
-                .strokeStyle("#fff8")
+                .strokeStyle(colors.dwhite(0.6))
+                .lineWidth(3)
                 .path()
-                .arc(...level.position, 20, 0, Math.PI * 2)
-                .stroke()
-                .close()
+                .arc(...level.position, 15 + Math.sin(Game.frameCount / 10) * 2, 0, Math.PI * 2)
+                .close(0)
         }
 
         canvas
             .align("center")
-            .baseLine("bottom")
-            .font(i == levels.length - 1 ? "15px monospace" : "10px monospace")
-            .fillStyle("#000")
-            .text(level.name, level.position[0], level.position[1] - 8 + (i == 12 ? 30 : 0))
-            .fillStyle("#fff")
-            .text(level.name, level.position[0], level.position[1] - 10 + (i == 12 ? 30 : 0))
+            .font("10px monospace")
+            .fillStyle(colors.black)
+            .text(level.name, level.position[0], level.position[1] - 23 + (i == 12 ? 35 : 0))
+            .fillStyle(colors.white)
+            .text(level.name, level.position[0], level.position[1] - 25 + (i == 12 ? 35 : 0))
+
+        if (level.stars > 0)
+            canvas.text(`⭐`.repeat(level.stars), level.position[0], level.position[1] - 37.5 + (i == 12 ? 60 : 0))
 
         if (dist(Game.mouseX, Game.mouseY, ...level.position) < 10) {
-            c2d.style.cursor = "pointer"
+            if (currentLevel < i) {
+                c2d.style.cursor = "not-allowed"
+            } else {
+                c2d.style.cursor = "pointer"
 
+                if (Game.clicked) {
+                    Game.level = i
+                    createLevel()
+                    Game.scene = 2
+                }
+            }
+        }
+    }
+
+    if (currentLevel < levels.length - 1) {
+        canvas
+            .fillStyle(colors.white)
+            .align("center")
+            .text(`- [E] Take on ${levels[currentLevel].name} -`, canvas.width / 2, canvas.height - 50)
+
+        if (pointRect(Game.mouseX, Game.mouseY, canvas.width / 2 - 125, canvas.height - 57.5, 250, 25)) {
+            c2d.style.cursor = "pointer"
+            canvas.fillStyle(colors.dwhite(0.2)).roundRect(canvas.width / 2 - 125, canvas.height - 57.5, 250, 25, 10)
             if (Game.clicked) {
-                Game.level = i
+                Game.level = currentLevel
                 createLevel()
                 Game.scene = 2
             }
+        }
+
+        if (Game.keysPressedDown("e")) {
+            Game.level = currentLevel
+            createLevel()
+            Game.scene = 2
+        }
+    }
+
+    if (currentLevel == 1 && !levels[0].completed) {
+        canvas.text(`- [R] Start tutorial -`, canvas.width / 2, canvas.height - 25).fillStyle(colors.dwhite(0.2))
+
+        if (pointRect(Game.mouseX, Game.mouseY, canvas.width / 2 - 125, canvas.height - 32.5, 250, 25)) {
+            c2d.style.cursor = "pointer"
+            canvas.fillStyle(colors.dwhite(0.2)).roundRect(canvas.width / 2 - 125, canvas.height - 32.5, 250, 25, 10)
+            if (Game.clicked) {
+                Game.level = 0
+                createLevel()
+                Game.scene = 2
+            }
+        }
+
+        if (Game.keysPressedDown("r")) {
+            Game.level = 0
+            createLevel()
+            Game.scene = 2
         }
     }
 }

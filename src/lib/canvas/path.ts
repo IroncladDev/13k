@@ -17,11 +17,6 @@ export class CanvasPath {
         return this
     }
 
-    arcTo(...args: CtxParams<"arcTo">) {
-        this.engine.context.arcTo(...args)
-        return this
-    }
-
     roundRect(...args: CtxParams<"roundRect">) {
         this.engine.context["roundRect"](...args)
         return this
@@ -32,17 +27,16 @@ export class CanvasPath {
         return this
     }
 
-    fill() {
-        this.engine.context.fill()
-        return this
-    }
-
-    stroke() {
-        this.engine.context.stroke()
-        return this
-    }
-
-    close() {
+    // 0 = stroke, no fill
+    // 1 = fill, no stroke
+    // 2 = fill, stroke
+    close(mode: 0 | 1 | 2) {
+        if (mode == 0 || mode == 2) {
+            this.engine.context.stroke()
+        }
+        if (mode == 1 || mode == 2) {
+            this.engine.context.fill()
+        }
         this.engine.context.closePath()
         return this.engine
     }

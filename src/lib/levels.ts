@@ -8,8 +8,16 @@ interface Level {
     mainWeaponAmmo: number
     sideWeaponAmmo: number
     position: [number, number]
+    background: [number, number]
     name: string
+    completed: boolean
+    stars: number
+    timeStarted: number
+    timeEnded: number
 }
+
+// Star 1 = Take all enemies as prisoners
+// Star 2 = Mission completed in under 2 minutes
 
 export const levels: Array<Level> = [
     {
@@ -18,13 +26,23 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 0,
         sideWeaponAmmo: 0,
         position: [710, 280],
+        background: [0, 1],
+        completed: true,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "San Miguel",
-        map: ["@ 8r", "a10"],
+        map: ["@ 8r", "a10", " 9a", " 9a", " 9a", " 9a5"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [680, 340],
+        background: [0, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "La Unión",
@@ -32,6 +50,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [810, 380],
+        background: [1, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Usulután",
@@ -39,6 +62,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [600, 410],
+        background: [1, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Zacatecoluca",
@@ -46,6 +74,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [500, 370],
+        background: [2, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Cojutepeque",
@@ -53,6 +86,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [480, 300],
+        background: [2, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Llobasco",
@@ -60,6 +98,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [500, 260],
+        background: [0, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Santa Ana",
@@ -67,6 +110,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [320, 220],
+        background: [0, 1],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Chalchuapa",
@@ -74,6 +122,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [270, 230],
+        background: [1, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Sonsonate",
@@ -81,6 +134,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [250, 310],
+        background: [1, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Acajutla",
@@ -88,6 +146,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [230, 350],
+        background: [2, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Izalco",
@@ -95,6 +158,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [290, 290],
+        background: [2, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "Nueva San Salvador",
@@ -102,6 +170,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [350, 320],
+        background: [0, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
     {
         name: "San Salvador",
@@ -109,6 +182,11 @@ export const levels: Array<Level> = [
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [390, 300],
+        background: [0, 0],
+        completed: false,
+        stars: 0,
+        timeStarted: 0,
+        timeEnded: 0,
     },
 ]
 
@@ -119,7 +197,11 @@ export const createLevel = () => {
     Game.blocks = []
     Game.bullets = []
     Game.particles = []
-    Game.keys.clear()
+    Game.shotsFired = 0
+    Game.tutorialStep = 0
+    Game.hits = 0
+
+    levels[Game.level].timeStarted = Date.now()
 
     let player: Player
 

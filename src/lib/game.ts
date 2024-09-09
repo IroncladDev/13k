@@ -8,7 +8,7 @@ const Game = {
     gravity: 0.5,
     maxVelocity: 20,
     blockSize: 50,
-    level: -1,
+    level: 0,
     entities: [] as Array<Entity>,
     blocks: [] as Array<Block>,
     bullets: [] as Array<Bullet>,
@@ -18,16 +18,19 @@ const Game = {
     cameraY: 0,
     snapshot: null as HTMLCanvasElement | null,
     hasSeenIntro: false,
+    shotsFired: 0,
+    hits: 0,
+    frameRate: 60,
 
     // Scenes
-    // 0 = Start
+    // 0 = Title
     // 1 = Map
     // 2 = Game
     // 3 = Mission Success
     // 4 = Mission Failure
     // 5 = Win screen
     // 6 = Intro/cutscene
-    scene: 0,
+    scene: 5,
 
     // Controls
     keys: new Map<string, boolean>(),
@@ -42,16 +45,16 @@ const Game = {
     tutorialStep: 0,
 
     initControls() {
-        window.addEventListener("keydown", event => {
+        window.addEventListener("keydown", (event: any) => {
             Game.keys.set(event.key.length == 1 ? event.key.toLowerCase() : event.key, true)
         })
-        window.addEventListener("keyup", event => {
+        window.addEventListener("keyup", (event: any) => {
             Game.keys.delete(event.key.length == 1 ? event.key.toLowerCase() : event.key)
             Game.keysPressed.set(event.key.length == 1 ? event.key.toLowerCase() : event.key, true)
         })
-        window.addEventListener("mousedown", () => (Game.pressed = true))
-        window.addEventListener("mouseup", () => ((Game.pressed = false), (Game.released = true)))
-        window.addEventListener("click", () => (Game.clicked = true))
+        c2d.addEventListener("mousedown", () => (Game.pressed = true))
+        c2d.addEventListener("mouseup", () => ((Game.pressed = false), (Game.released = true)))
+        c2d.addEventListener("click", () => (Game.clicked = true))
         c2d.addEventListener("mousemove", (event: any) => {
             const rect = c2d.getBoundingClientRect()
 

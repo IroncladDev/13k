@@ -5,8 +5,6 @@ export interface EnemyStats {
     weapon: WeaponKey[]
     speed: number
     description: string
-    bountyAlive: number
-    bountyDead: number
     /**
      * 0 = Head
      * 1 = Body
@@ -33,8 +31,6 @@ export const enemies: Array<EnemyStats> = [
         description: "Newly-recruited gang member",
         weapon: [5, 8],
         speed: 5,
-        bountyAlive: 10,
-        bountyDead: 5,
         health: [5, 15, 10],
     },
     {
@@ -42,8 +38,6 @@ export const enemies: Array<EnemyStats> = [
         description: "A general gang member",
         weapon: [10, 6],
         speed: 7,
-        bountyAlive: 15,
-        bountyDead: 10,
         health: [7, 20, 15],
     },
     {
@@ -51,16 +45,12 @@ export const enemies: Array<EnemyStats> = [
         description: "Leads lower-ranking gang members in carrying out organized operations",
         weapon: [1],
         speed: 7,
-        bountyAlive: 25,
-        bountyDead: 15,
         health: [10, 25, 20],
     },
     {
         name: "Coordinator",
         description: "Organizes programs and enforces rules within the gang",
         weapon: [7, 9],
-        bountyAlive: 35,
-        bountyDead: 20,
         speed: 5,
         health: [15, 30, 25],
     },
@@ -68,8 +58,6 @@ export const enemies: Array<EnemyStats> = [
         name: "Palabrero",
         description: "High-ranking leader and organizer within the gang",
         weapon: [3],
-        bountyAlive: 100,
-        bountyDead: 60,
         speed: 6,
         health: [15, 35, 25],
     },
@@ -77,8 +65,6 @@ export const enemies: Array<EnemyStats> = [
         name: "Runner",
         description: "The bridge between the gang leaders and lower-ranking members",
         weapon: [10, 7],
-        bountyAlive: 125,
-        bountyDead: 75,
         speed: 10,
         health: [10, 25, 20],
     },
@@ -87,16 +73,12 @@ export const enemies: Array<EnemyStats> = [
         description: "A member of the gang's board of directors overseeing operations over multiple regions",
         weapon: [4],
         speed: 5,
-        bountyAlive: 200,
-        bountyDead: 100,
         health: [20, 35, 30],
     },
     {
         name: "Recruit",
         description: "Newly-recruited gang member",
         speed: 4,
-        bountyAlive: 10,
-        bountyDead: 5,
         health: [5, 10, 10],
         weapon: [5],
     },
