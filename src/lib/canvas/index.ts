@@ -48,8 +48,8 @@ export class CanvasEngine {
     }
 
     // Text
-    font(font: CtxValue<"font">) {
-        this.context.font = font
+    font(size = 12, bold = false) {
+        this.context.font = bold ? "bold " : "" + size + "px monospace"
         return this
     }
     align(alignment: CtxValue<"textAlign">) {

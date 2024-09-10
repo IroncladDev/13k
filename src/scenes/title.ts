@@ -10,13 +10,6 @@ export const startScene = () => {
         .drawImage(backgrounds[1], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
         .drawImage(foregrounds[0], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
 
-    const gradient = canvas.context.createLinearGradient(0, 0, 0, canvas.height)
-
-    gradient.addColorStop(0, "#0000")
-    gradient.addColorStop(1, "rgba(255,100,0,0.3)")
-
-    canvas.fillStyle(gradient).fillRect(0, 0, canvas.width, canvas.height)
-
     canvas
         .push()
         .translate(0, 200)
@@ -88,9 +81,9 @@ export const startScene = () => {
         .pop()
         .fillStyle(colors.white)
         .align("center")
-        .font("bold 45px monospace")
+        .font(45, true)
         .text("Salvadoran Reclamation: MS-13", canvas.width / 2, 100)
-        .font("25px monospace")
+        .font(25)
         .text("- Click to start -", canvas.width / 2, canvas.height - 100)
 
     if (Game.clicked) {

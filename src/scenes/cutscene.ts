@@ -24,15 +24,15 @@ export const introScene = () => {
         .lineTo(canvas.width / 2 - 30, 160)
         .lineTo(canvas.width / 2 - 30, 190)
         .lineTo(canvas.width / 2 - 200, 190)
-        .moveTo(canvas.width / 2 - 200, 320)
-        .lineTo(canvas.width / 2 + 200, 320)
-        .lineTo(canvas.width / 2 + 200, 370)
-        .lineTo(canvas.width / 2 + 180, 390)
-        .lineTo(canvas.width / 2 - 200, 390)
-        .lineTo(canvas.width / 2 - 200, 320)
+        .moveTo(canvas.width / 2 - 200, 310)
+        .lineTo(canvas.width / 2 + 200, 310)
+        .lineTo(canvas.width / 2 + 200, 360)
+        .lineTo(canvas.width / 2 + 180, 380)
+        .lineTo(canvas.width / 2 - 200, 380)
+        .lineTo(canvas.width / 2 - 200, 310)
         .close(2)
         .fillStyle(colors.white)
-        .font("15px monospace")
+        .font(15)
         .align("left")
         .text("El Salvador, 2019", canvas.width / 2 - 190, 170, 600)
         .text(
@@ -44,7 +44,7 @@ export const introScene = () => {
         .text(
             "Under President Nayib Bukele's command, you're tasked with taking out the MS-13 gangs scattered throughout the country.",
             canvas.width / 2 - 190,
-            330,
+            325,
             400,
         )
         .align("center")

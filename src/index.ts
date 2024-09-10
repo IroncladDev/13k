@@ -33,7 +33,7 @@ function draw(currentTime: number) {
 
         c2d.style.cursor = "default"
 
-        canvas.font("15px monospace").align("center")
+        canvas.font(15).align("center")
         canvas.context.textBaseline = "top"
         canvas.context.lineJoin = "round"
 

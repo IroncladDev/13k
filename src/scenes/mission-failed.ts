@@ -23,7 +23,7 @@ export const missionFailureScene = () => {
         )
         .fillStyle(colors.white)
         .align("center")
-        .font("bold 25px monospace")
+        .font(25, true)
         .text("Mission Failed", canvas.width / 2, 100)
         .fillStyle("rgb(35,55,95,0.4)")
 
@@ -47,16 +47,16 @@ export const missionFailureScene = () => {
 
     canvas
         .fillStyle(colors.white)
-        .font("20px monospace")
+        .font(20)
         .text("- [E] Retry -", canvas.width / 2, canvas.height - 147.5)
-        .text("- [R] Return to menu -", canvas.width / 2, canvas.height - 97.5)
+        .text("- [Q] Return to levels -", canvas.width / 2, canvas.height - 97.5)
 
     if (Game.keysPressedDown("e")) {
         createLevel()
         Game.scene = 2
     }
 
-    if (Game.keysPressedDown("r")) {
+    if (Game.keysPressedDown("q")) {
         Game.scene = 1
         Game.level--
     }

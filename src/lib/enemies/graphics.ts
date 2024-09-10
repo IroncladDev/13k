@@ -3,7 +3,7 @@ import { CanvasPath } from "../canvas/path"
 
 type VariantList = Array<(canvas: CanvasEngine) => CanvasEngine>
 
-export const shirtColors = ["#f5f5f5", "#d5d5d5", "#b5b5b5"]
+export const shirtColors = ["#eee", "#ccc", "#aaa"]
 export const skinColors = ["#d4c5b0", "#dbc8ab", "#c9b79b", "#b3a289", "#a19077"]
 
 export const shirts: VariantList = [

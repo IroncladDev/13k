@@ -12,7 +12,7 @@ export const levelsScene = () => {
         .drawImage(foregrounds[0], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
         .fillStyle(colors.white)
         .align("center")
-        .font("bold 25px monospace")
+        .font(25, true)
         .text("Level Select", canvas.width / 2, 50)
 
     // Roughly-drawn shape of El Salvador
@@ -95,7 +95,7 @@ export const levelsScene = () => {
 
         canvas
             .align("center")
-            .font("10px monospace")
+            .font(10)
             .fillStyle(colors.black)
             .text(level.name, level.position[0], level.position[1] - 23 + (i == 12 ? 35 : 0))
             .fillStyle(colors.white)

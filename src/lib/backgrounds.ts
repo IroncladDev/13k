@@ -14,17 +14,12 @@ backgrounds.forEach(canvas => {
 })
 
 const divider = (canvas: CanvasEngine) => {
-    const g4 = canvas.context.createLinearGradient(
-        0,
-        canvas.height / 2 + Game.blockSize - 10,
-        0,
-        canvas.height / 2 + Game.blockSize,
-    )
+    const g4 = canvas.context.createLinearGradient(0, canvas.height / 2 + 40, 0, canvas.height / 2 + 50)
     g4.addColorStop(0, colors.transparent)
     g4.addColorStop(1, colors.black)
 
-    canvas.fillStyle(g4).fillRect(0, canvas.height / 2 + Game.blockSize - 10, canvas.width, 10)
-    canvas.fillStyle(colors.black).fillRect(0, canvas.height / 2 + Game.blockSize, canvas.width, canvas.height / 2)
+    canvas.fillStyle(g4).fillRect(0, canvas.height / 2 + 40, canvas.width, 10)
+    canvas.fillStyle(colors.black).fillRect(0, canvas.height / 2 + 50, canvas.width, canvas.height / 2)
 }
 
 const drawNightSky = (canvas: CanvasEngine) => {
@@ -58,6 +53,13 @@ const drawNightSky = (canvas: CanvasEngine) => {
     }
 
     divider(canvas)
+
+    const gradient = canvas.context.createLinearGradient(0, 0, 0, canvas.height)
+
+    gradient.addColorStop(0, "#0000")
+    gradient.addColorStop(1, "rgba(0,100,200,0.2)")
+
+    canvas.fillStyle(gradient).fillRect(0, 0, canvas.width, canvas.height)
 }
 
 const drawSunset = (canvas: CanvasEngine) => {
@@ -85,10 +87,10 @@ const drawSunset = (canvas: CanvasEngine) => {
 
     const g3 = canvas.context.createRadialGradient(
         canvas.width / 4,
-        canvas.height / 2 + 25 + Game.blockSize,
+        canvas.height / 2 + 75,
         0,
         canvas.width / 4,
-        canvas.height / 2 + 25 + Game.blockSize,
+        canvas.height / 2 + 75,
         100,
     )
 
@@ -99,6 +101,13 @@ const drawSunset = (canvas: CanvasEngine) => {
     canvas.fillStyle(g3).fillRect(0, 0, canvas.width, canvas.height)
 
     divider(canvas)
+
+    const gradient = canvas.context.createLinearGradient(0, 0, 0, canvas.height)
+
+    gradient.addColorStop(0, "#0000")
+    gradient.addColorStop(1, "rgba(255,100,0,0.2)")
+
+    canvas.fillStyle(gradient).fillRect(0, 0, canvas.width, canvas.height)
 }
 
 const drawCloudySky = (canvas: CanvasEngine) => {
@@ -139,6 +148,13 @@ const drawCloudySky = (canvas: CanvasEngine) => {
     createLayer(100, colors.dwhite(0.4), colors.dwhite(0.2))
     createLayer(50, colors.dwhite(0.4), colors.dwhite(0.2))
     createLayer(0, colors.dwhite(0.4), colors.dwhite(0.2))
+
+    const gradient = canvas.context.createLinearGradient(0, 0, 0, canvas.height)
+
+    gradient.addColorStop(0, "#0000")
+    gradient.addColorStop(1, "rgba(0,100,200,0.2)")
+
+    canvas.fillStyle(gradient).fillRect(0, 0, canvas.width, canvas.height)
 }
 
 drawNightSky(new CanvasEngine(backgrounds[0], { willReadFrequently: true }))
@@ -162,7 +178,7 @@ const drawCityscape = (canvas: CanvasEngine) => {
     while (rects.reduce((a, b) => a + b[0] + b[2], 0) < canvas.width) {
         rects.push([
             Math.floor(10 + Math.random() * 30),
-            Math.floor(Math.random() * 75),
+            Math.floor(Math.random() * 50),
             Math.floor(-5 + Math.random() * 20),
         ])
     }
@@ -172,7 +188,7 @@ const drawCityscape = (canvas: CanvasEngine) => {
 
         const [w, height] = rects[i]
 
-        canvas.roundRect(prevX, canvas.height / 2 - height / 2 + Game.blockSize, w, height, 5)
+        canvas.roundRect(prevX, canvas.height / 2 - height + 50, w, height, 5)
     }
 }
 
@@ -192,9 +208,9 @@ const drawMountains = (canvas: CanvasEngine) => {
 
     const gr = canvas.context.createLinearGradient(
         0,
-        canvas.height / 2 - rects.sort((a, b) => b[1] - a[1])[0][1] + Game.blockSize,
+        canvas.height / 2 - rects.sort((a, b) => b[1] - a[1])[0][1] + 50,
         0,
-        canvas.height / 2 + Game.blockSize,
+        canvas.height / 2 + 50,
     )
 
     gr.addColorStop(0, colors.transparent)
@@ -207,9 +223,9 @@ const drawMountains = (canvas: CanvasEngine) => {
 
         const [w, height] = rects[i]
 
-        path.moveTo(prevX, canvas.height / 2 + Game.blockSize)
-            .lineTo(prevX + w / 2, canvas.height / 2 + Game.blockSize - height)
-            .lineTo(prevX + w, canvas.height / 2 + Game.blockSize)
+        path.moveTo(prevX, canvas.height / 2 + 50)
+            .lineTo(prevX + w / 2, canvas.height / 2 + 50 - height)
+            .lineTo(prevX + w, canvas.height / 2 + 50)
     }
 
     path.close(1)

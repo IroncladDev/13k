@@ -36,24 +36,25 @@ export const gameScene = () => {
     canvas.translate(canvas.width / 2, canvas.height / 2)
     canvas.translate(-canvas.width / 2 + Game.cameraX, -canvas.height / 2 + Game.cameraY)
 
-    Game.bullets = Game.bullets.filter(bullet => !bullet.dead)
     Game.particles = Game.particles.filter(particle => !particle.dead)
 
+    for (const entity of Game.entities) {
+        entity.moveX()
+    }
     for (const bullet of Game.bullets) {
         bullet.update()
         bullet.render()
-    }
-    for (const entity of Game.entities) {
-        entity.render()
-        entity.run()
-        entity.moveX()
     }
     for (const block of Game.blocks) {
         block.run()
         block.collideX()
     }
+    // Kill bullets immediately after contacting blocks
+    Game.bullets = Game.bullets.filter(bullet => !bullet.dead)
     for (const entity of Game.entities) {
+        entity.run()
         entity.moveY()
+        entity.render()
     }
     for (const block of Game.blocks) {
         block.collideY()

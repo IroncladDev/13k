@@ -3,6 +3,7 @@ import { pointAt } from "@/lib/utils"
 
 type CustomParticleAttributes =
     | {
+          // Smoke
           type: 0
           r: number
           color: [number, number, number]
@@ -12,16 +13,12 @@ type CustomParticleAttributes =
           height: number
       }
     | {
-          type: 1
-          r: number
-          angle: number
-          bulletSpeed: number
-      }
-    | {
+          // Sparks
           type: 2
           r: number
       }
     | {
+          // Blood trail
           type: 3
           r: number
           bulletSpeed: number
@@ -57,27 +54,6 @@ export class Particle {
             if (this.a.lifetime <= 0) {
                 this.dead = true
             }
-        }
-
-        if (this.a.type == 1) {
-            this.a.x += Math.cos(this.a.r) * this.a.lifetime
-            this.a.y += Math.sin(this.a.r) * this.a.lifetime
-            this.a.lifetime += this.a.lifetime.tween(0, 2)
-
-            if (this.a.lifetime <= 0.01) this.dead = true
-
-            canvas
-                .fillStyle(`rgba(200,200,200,${this.a.lifetime / 5}`)
-                .path()
-                .moveTo(this.a.x, this.a.y)
-                .arc(
-                    this.a.x,
-                    this.a.y,
-                    (1 - this.a.lifetime) * this.a.bulletSpeed,
-                    this.a.r - this.a.angle,
-                    this.a.r + this.a.angle,
-                )
-                .close(1)
         }
 
         if (this.a.type == 2) {

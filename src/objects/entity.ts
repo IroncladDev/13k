@@ -12,10 +12,8 @@ export abstract class Entity {
     y: number
     xVel = 0
     yVel = 0
-    speed = 5
     w = 40
     h = 80
-    xAcc = 0.5
     baseRotation = 0
     rotateTo = 0
     baseScaleTo = 1
@@ -24,7 +22,6 @@ export abstract class Entity {
     recoilRotation = 0
     fireFrame = 0
     canJump = false
-    isAgainstWall = false
     jumpForce = 12
     dirTo = 1
     dir: -1 | 1 = 1
@@ -34,8 +31,9 @@ export abstract class Entity {
     weaponRotation = Math.PI / 2
     weaponRotationTo = Math.PI / 2
     knockback = 0
-    abstract health: [number, number, number]
-    abstract maxHealth: [number, number, number]
+    speed = 5
+    health: [number, number, number] = [0, 0, 0]
+    maxHealth: [number, number, number] = [0, 0, 0]
 
     constructor(x: number, y: number) {
         this.x = x
@@ -57,7 +55,7 @@ export abstract class Entity {
     shoot(r: number) {
         if (this.wp.type == 1) return
 
-        const [x, y] = pointAt(this.centerX, this.centerY + this.wp.barrelY, r, this.wp.barrelX)
+        const [x, y] = pointAt(this.centerX, this.centerY + this.wp.barrelY, r, this.wp.barrelX - this.wp.bulletSpeed)
 
         Game.bullets.push(
             new Bullet({
@@ -92,21 +90,7 @@ export abstract class Entity {
             else ejectShell()
         }
 
-        for (let i = 2 + Math.floor(Math.random() * 2); i--; ) {
-            Game.particles.push(
-                new Particle({
-                    type: 1,
-                    x,
-                    y,
-                    r: r + Math.random() * (Math.PI / 30) - Math.PI / 60,
-                    lifetime: 0.25 + Math.random() * (0.5 - 0.25),
-                    angle: Math.random() * (Math.PI / 16 - Math.PI / 30) + Math.PI / 30,
-                    bulletSpeed: this.wp.bulletSpeed,
-                }),
-            )
-        }
-
-        if (this.movingDir !== 0) this.xVel += Math.cos(r) * -this.wp.recoilX
+        if (this.movingDir != 0) this.xVel += Math.cos(r) * -this.wp.recoilX
         this.recoilRotation += (Math.PI / 180) * this.wp.recoilY
         this.weaponRotationTo -= this.recoilRotation * this.dir
         this.fireCooldown = this.wp.reload
@@ -114,16 +98,16 @@ export abstract class Entity {
 
     moveX() {
         if (this.movingDir == 1) {
-            this.xVel += this.xAcc
+            this.xVel += 0.5
             this.rotateTo += this.rotateTo.tween(Math.PI / 32, 5)
         } else if (this.movingDir == -1) {
-            this.xVel -= this.xAcc
+            this.xVel -= 0.5
             this.rotateTo += this.rotateTo.tween(-Math.PI / 32, 5)
         } else {
             this.rotateTo += this.rotateTo.tween(0, 5)
         }
 
-        const speedCap = (this.speed - (this.wp.type == 1 ? 0 : this.wp.weight)) / (this.movingDir !== this.dir ? 2 : 1)
+        const speedCap = (this.speed - (this.wp.type == 1 ? 0 : this.wp.weight)) / (this.movingDir != this.dir ? 2 : 1)
 
         this.xVel += this.xVel.tween(0, 10)
         this.xVel = Math.min(Math.max(this.xVel, -speedCap), speedCap) - this.knockback
@@ -132,7 +116,7 @@ export abstract class Entity {
     }
 
     moveY() {
-        if (this.y > levels[Game.level].map.length * Game.blockSize + 500) this.dead = true
+        if (this.y > levels[Game.level].map.length * 50 + 500) this.dead = true
 
         if (this.yVel + Game.gravity < Game.maxVelocity) {
             this.yVel += Game.gravity
@@ -228,9 +212,9 @@ export abstract class Entity {
                 .filter(
                     e =>
                         !("hasFired" in e) &&
-                        e !== this &&
+                        e != this &&
                         !(e as Enemy).hasSurrendered &&
-                        !(e as Enemy).dying &&
+                        !(e as Enemy).dead &&
                         !(e as Enemy).hasSeenPlayer,
                 )
                 .sort((a, b) => a.dist(this.centerX, this.centerY) - b.dist(this.centerX, this.centerY))[0]

@@ -4,59 +4,24 @@
 - [ ] Z-index of "[E] to take weapon" text is wrong
 
 ## Todo
-- [ ] Redo cutscene/story screen
-- [ ] Win screen
 - [ ] Blocks
     - [ ] Doors (different hitbox), can be shot through and broken
     - [ ] Different types of blocks
         - [ ] Concrete
 - [ ] Levels
-- [ ] MIT License & credits
-- [x] Thumbnail images
+- [ ] MIT License & credits (zzfx)
 - [ ] Rewrite README
-- [ ] Background moves with player (?)
-- [ ] Make weapons buttons clickable (?)
 - [ ] Add concise code comments (?)
-- [x] Option to skip tutorial
-- [x] Keyboard controls for level select
-- [x] Return to main menu option after winning or losing level
-- [x] Backgrounds & Environment for different levels
-    - [x] Dawn
-    - [x] Cloudy
-    - [x] Night
-    - [x] Mountains
-    - [x] Cityscape
-- [x] Level score tracker instead of just using `level`
-- [x] Timeout after killing all enemies to next level, maybe make player press [E]?
-- [x] Dash sound
-- [x] Design index page
-- [x] Player getting shot & hit sound effect
-- [x] ADD HOVERING TO TUTORIAL
-- [x] ammo & items
-    - [x] Weapon Drops
-    - [x] Magazines
-    - [x] Inventory (max 1 long weapon, 1 short weapon, 1 meelee weapon, 6 misc items (?))
-    - [x] Out of ammo indicator
-- [x] UI
-    - [x] Health indications
-    - [x] Enemy inspection 
-    - [x] Ammo Count
-    - [x] Weapon stats & selection
-    - [x] Better scope
-    - [x] Custom cursor
-    - [x] Health regeneration
-    - [x] Tutorial
 - [x] PARTICLES
     - [x] Sparks
     - [x] Muzzle flash
     - [x] Blood
-    - [ ] Dirt from walking (?)
-- [x] scenes, transitions
 
 - [ ] Optimization
-    - [ ] Do something about fonts
-    - [ ] Hex colors instead of rgb
-    - [ ] Axe muzzle flashes and sparks (?)
+    - [x] Do something about fonts/alignment
+    - [ ] Compress levels
+    - [x] Axe muzzle flashes and sparks (?)
+    - [x] Just use 50 instead of blockSize
     - [x] Downsize string names
     - [x] Name things more similarly
     - [x] Arrow functions

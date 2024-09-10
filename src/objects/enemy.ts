@@ -33,12 +33,9 @@ export class Enemy extends Entity {
     baseLineToPlayer = false
     canShootPlayer = false
     hasSeenPlayer = false
-    health = [5, 15, 10] as [number, number, number]
-    maxHealth = [5, 15, 10] as [number, number, number]
     player: Player | null = null
     hasSurrendered = false
     stats: EnemyStats
-    dying = false
     dyingFrame = 0
     headLeftImage: HTMLCanvasElement
     headRightImage: HTMLCanvasElement
@@ -98,17 +95,17 @@ export class Enemy extends Entity {
     checkHealth() {
         if (this.health[1] <= 0) {
             if (this.health[1] < -10) {
-                this.dying = true
+                this.dead = true
             } else {
                 this.hasSurrendered = true
             }
         }
-        if (this.health[0] <= 0) this.dying = true
+        if (this.health[0] <= 0) this.dead = true
         if (this.health[2] <= 0) {
             this.hasSurrendered = true
         }
         if (this.hasSurrendered) this.h = 60
-        if (this.dying) {
+        if (this.dead) {
             this.h = 80
             this.hasSurrendered = false
         }
@@ -118,7 +115,7 @@ export class Enemy extends Entity {
         this.checkHealth()
         this.animateVars()
 
-        if (!this.dying)
+        if (!this.dead)
             this.handleBulletCollisions(bullet => {
                 if (bullet.entity instanceof Player) {
                     Game.hits++
@@ -126,14 +123,14 @@ export class Enemy extends Entity {
 
                 this.checkHealth()
 
-                if (!this.hasSurrendered && !this.dying) {
+                if (!this.hasSurrendered && !this.dead) {
                     const minRot = normalizeToRange(bullet.r)
                     this.dir = minRot > -Math.PI / 2 && minRot < Math.PI / 2 ? -1 : 1
                 }
             })
 
         if (
-            this.dying
+            this.dead
                 ? pointRect(
                       Game.mouseX - Game.cameraX,
                       Game.mouseY - Game.cameraY,
@@ -158,11 +155,8 @@ export class Enemy extends Entity {
 
         const player = this.player || (Game.entities.find(e => e instanceof Player) as Player)
 
-        if (this.hasSurrendered || this.dying) {
-            if (
-                dist(this.centerX, this.centerY, player.centerX, player.centerY) < Game.blockSize / 2 &&
-                !this.weaponTaken
-            ) {
+        if (this.hasSurrendered || this.dead) {
+            if (dist(this.centerX, this.centerY, player.centerX, player.centerY) < 15 && !this.weaponTaken) {
                 if (player.arsenal[2][0] != this.weapon) {
                     let text = ""
 
@@ -173,11 +167,11 @@ export class Enemy extends Entity {
                     canvas
                         .fillStyle(colors.white)
                         .align("center")
-                        .font("12px monospace")
-                        .text(text, this.centerX, this.y)
+                        .font()
+                        .text(text, this.centerX, this.y - 25)
 
-                    if (player.arsenal[1][0] !== this.weapon && this.wp.type == 0 && this.wp.isPistol) {
-                        canvas.text("[R] take weapon", this.centerX, this.y + 15)
+                    if (player.arsenal[1][0] != this.weapon && this.wp.type == 0 && this.wp.isPistol) {
+                        canvas.text("[R] take weapon", this.centerX, this.y - 10)
                         if (Game.keysPressedDown("r")) {
                             player.arsenal[1][0] = this.weapon as ShortWeaponKey
                             player.arsenal[1][1] = (this.wp as GunWeapon).capacity
@@ -191,8 +185,8 @@ export class Enemy extends Entity {
                             player.arsenal[1][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 1
                         } else if (
-                            player.arsenal[0][0] !== (this.weapon as LongWeaponKey | MeeleeWeaponKey) ||
-                            player.arsenal[2][0] !== (this.weapon as LongWeaponKey | MeeleeWeaponKey)
+                            player.arsenal[0][0] != (this.weapon as LongWeaponKey | MeeleeWeaponKey) ||
+                            player.arsenal[2][0] != (this.weapon as LongWeaponKey | MeeleeWeaponKey)
                         ) {
                             if (this.wp.type == 1) {
                                 player.arsenal[2][0] = this.weapon as MeeleeWeaponKey
@@ -280,6 +274,7 @@ export class Enemy extends Entity {
 
                     player.health[1] -= this.wp.damage
                     player.knockback = (this.wp.knockback / 2) * player.dir * (player.x < this.x ? 1 : -1)
+                    player.timeSinceDamaged = 0
                     setTimeout(() => zzfx(...sfx[11]), 250)
                     this.fireFrame = 1
                     this.fireCooldown = this.wp.reload
@@ -317,10 +312,11 @@ export class Enemy extends Entity {
             } else {
                 const range = this.wp.lifetime * this.wp.bulletSpeed
 
-                if (playerDist >= range && !this.canShootPlayer) {
+                if (!this.canShootPlayer && playerDist < Math.min(range, canvas.width / 3)) {
                     this.movingDir = player.centerX > this.centerX ? 1 : -1
                 } else if (this.canShootPlayer) {
-                    if (playerDist < 200) this.movingDir = -(player.centerX > this.centerX ? 1 : -1) as -1 | 1
+                    if (playerDist < this.wp.barrelX)
+                        this.movingDir = -(player.centerX > this.centerX ? 1 : -1) as -1 | 1
                     else this.movingDir = 0
                 }
 
@@ -393,7 +389,7 @@ export class Enemy extends Entity {
             .rotate(
                 this.hasSurrendered
                     ? Math.PI / 2 + (Math.PI / 6) * -this.dir
-                    : this.dying
+                    : this.dead
                       ? this.dyingFrame * -(Math.PI / 2)
                       : this.weaponRotationTo,
             )

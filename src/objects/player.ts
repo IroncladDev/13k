@@ -19,8 +19,8 @@ import { colors } from "@/lib/constants"
 
 export class Player extends Entity {
     hasFired = false
-    health = [15, 30, 15] as [number, number, number]
-    maxHealth = [15, 30, 15] as [number, number, number]
+    health = [20, 40, 30] as [number, number, number]
+    maxHealth = [20, 40, 30] as [number, number, number]
     arsenal: [[type: LongWeaponKey, ammo: number], [type: ShortWeaponKey, ammo: number], [type: MeeleeWeaponKey]] = [
         [0, levels[Game.level].mainWeaponAmmo],
         [5, levels[Game.level].sideWeaponAmmo],
@@ -39,11 +39,10 @@ export class Player extends Entity {
     timeSinceDamaged = 0
     tutorialEnemy: Enemy | undefined = undefined
     winTimer = 40
+    speed = 7
 
     constructor(x: number, y: number) {
         super(x, y)
-
-        this.speed = 7
     }
 
     run() {
@@ -70,13 +69,7 @@ export class Player extends Entity {
 
         if (this.dashTime > 0) this.dashTime--
 
-        if (
-            this.dashTime == 0 &&
-            Game.keysDown("Shift") &&
-            this.movingDir != 0 &&
-            this.canJump &&
-            !this.isAgainstWall
-        ) {
+        if (this.dashTime == 0 && Game.keysDown("Shift") && this.movingDir != 0 && this.canJump) {
             if (isTutorial && Game.tutorialStep == 1) {
                 this.arsenal[0][1] = 3
                 Game.tutorialStep = 2
@@ -113,7 +106,7 @@ export class Player extends Entity {
             }
 
             if (Game.tutorialStep == 5) {
-                if (this.tutorialEnemy?.hasSurrendered || this.tutorialEnemy?.dying) {
+                if (this.tutorialEnemy?.hasSurrendered || this.tutorialEnemy?.dead) {
                     Game.tutorialStep = 6
                 }
             }
@@ -154,15 +147,18 @@ export class Player extends Entity {
             zzfx(...sfx[10])
         })
 
-        if (this.timeSinceDamaged < 250) this.timeSinceDamaged++
+        if (this.timeSinceDamaged < 150) this.timeSinceDamaged++
         if (this.fireCooldown > 0) this.fireCooldown--
-        if (this.timeSinceDamaged >= 250)
+        if (this.timeSinceDamaged >= 150)
             this.health.forEach((h, i) => {
                 if (h < this.maxHealth[i]) this.health[i] += (1 - h / this.maxHealth[i]) * 0.1
             })
 
         // Attacks
         if (Game.pressed && this.fireCooldown == 0 && (this.wp.type == 1 || this.wp.isSemi ? !this.hasFired : true)) {
+            if (Game.mouseButton == 2) this.currentWeapon = 2
+            this.weapon = this.arsenal[this.currentWeapon][0]
+
             if (isTutorial && Game.tutorialStep == 2 && this.arsenal[0][1] == 0) {
                 Game.tutorialStep = 3
             }
@@ -172,7 +168,7 @@ export class Player extends Entity {
                 zzfx(...sfx[4])
                 const [x, y] = pointAt(this.centerX, this.centerY, this.weaponRotationTo, this.wp.length)
                 for (const enemy of Game.entities) {
-                    if (!(enemy instanceof Enemy) || enemy.dying) continue
+                    if (!(enemy instanceof Enemy) || enemy.dead) continue
                     const strikeX = Math.min(Math.max(x, enemy.x), enemy.x + enemy.w)
                     const strikeY = Math.min(Math.max(y, enemy.y), enemy.y + enemy.h)
                     const strikeDist = dist(x, y, strikeX, strikeY)
@@ -185,7 +181,7 @@ export class Player extends Entity {
                             ? this.wp.knockback / 4
                             : this.wp.knockback * dirFromPlayer
                         enemy.rotateTo += this.wp.knockback * 2 * (Math.PI / 180) * -dirFromPlayer
-                        if (!enemy.hasSurrendered && !enemy.dying) {
+                        if (!enemy.hasSurrendered && !enemy.dead) {
                             setTimeout(() => {
                                 if (this.dead || enemy.dead) return
                                 enemy.dir = this.x < enemy.x ? -1 : 1
@@ -401,13 +397,13 @@ export class Player extends Entity {
         meeleeWeapon.render(0, colors.transparent, colors.black)
 
         canvas
-            .font("12px monospace")
+            .font()
             .pop()
             .fillStyle(colors.white)
             .text(longWeapon.name, 60, 40)
             .text(sideWeapon.name, 170, 40)
             .text(meeleeWeapon.name, 280, 40)
-            .font("10px monospace")
+            .font(10)
             .text("[1]", 25, 20)
             .text("[2]", 135, 20)
             .text("[3]", 245, 20)
@@ -456,19 +452,19 @@ export class Player extends Entity {
                 .roundRect(canvas.width - 160, 10, 150, 100, 10)
                 .fillStyle(colors.white)
                 .align("left")
-                .font("12px monospace")
+                .font()
                 .text(hoveredEnemy.name, canvas.width - 150, 20)
                 .fillStyle(colors.dwhite(0.7))
                 .roundRect(canvas.width - 150, 32, canvas.context.measureText(hoveredEnemy.name).width, 2, 10)
                 .fillStyle(colors.white)
-                .font("10px monospace")
+                .font(10)
                 .text("Rank: " + hoveredEnemy.stats.name, canvas.width - 150, 40)
                 .text(
                     "Weapon: " + (hoveredEnemy.weaponTaken ? "--" : weapons[hoveredEnemy.weapon].name),
                     canvas.width - 150,
                     95,
                 )
-                .font("8px monospace")
+                .font(8)
                 .fillStyle(colors.dwhite(0.7))
                 .text(hoveredEnemy.stats.description, canvas.width - 145, 55, 130)
         } else {
@@ -485,10 +481,11 @@ export class Player extends Entity {
             } else if (Game.tutorialStep == 1) {
                 tutorialMessage = "While moving, [Shift] to dash. No dashing in the air"
             } else if (Game.tutorialStep == 2) {
-                tutorialMessage = "Mouse to aim, Click / Hold mouse to attack"
+                tutorialMessage =
+                    "Mouse to aim, Click / Hold mouse to attack. Right click to quickly switch to and attack with meelee weapon"
             } else if (Game.tutorialStep == 3) {
                 tutorialMessage =
-                    "[1][2][3] to switch weapons. You are limited to one long weapon, one short weapon, and one meelee weapon"
+                    "[1][2][3] to switch between your long, side, and meelee weapon. Side weapons and meelee weapons are lighter but are less powerful"
             } else if (Game.tutorialStep == 4) {
                 tutorialMessage = "Hover over enemies to see their stats, rank, weapon, and bounty"
             } else if (Game.tutorialStep == 5) {
@@ -502,22 +499,20 @@ export class Player extends Entity {
                 .fillStyle(colors.ui())
                 .roundRect(canvas.width - 310, canvas.height - 90, 300, 80, 10)
                 .fillStyle(colors.white)
-                .font("12px monospace")
+                .font()
                 .align("left")
                 .text("Tutorial (" + (Game.tutorialStep + 1) + "/8)", canvas.width - 300, canvas.height - 80)
-                .font("10px monospace")
+                .font(10)
                 .fillStyle(colors.dwhite(0.7))
                 .text(tutorialMessage, canvas.width - 300, canvas.height - 65, 280)
         } else {
-            const threatCount = Game.entities.filter(
-                e => e instanceof Enemy && !e.dying && !e.hasSurrendered && !e.dead,
-            ).length
+            const threatCount = Game.entities.filter(e => e instanceof Enemy && !e.dead && !e.hasSurrendered).length
             canvas
                 .fillStyle(colors.white)
                 .align("right")
-                .font("bold 15px monospace")
+                .font(15, true)
                 .text(`Level ${Game.level}: ${levels[Game.level].name}`, canvas.width - 10, canvas.height - 50)
-                .font("12px monospace")
+                .font()
                 .text(
                     threatCount + " Active Threat" + (threatCount == 1 ? "" : "s"),
                     canvas.width - 10,
@@ -530,7 +525,7 @@ export class Player extends Entity {
                 canvas
                     .fillStyle("#000a")
                     .fillRect(0, 0, canvas.width, canvas.height)
-                    .font("bold 20px monospace")
+                    .font(20, true)
                     .fillStyle(colors.white)
                     .align("center")
                     .text("Mission Accomplished", canvas.width / 2, canvas.height / 2)

@@ -1,5 +1,5 @@
 import Game from "@/lib/game"
-import { Block, blockMap } from "@/objects/block"
+import { Block, blockString, BlockType } from "@/objects/block"
 import { Enemy, enemyMap } from "@/objects/enemy"
 import { Player } from "@/objects/player"
 
@@ -22,7 +22,7 @@ interface Level {
 export const levels: Array<Level> = [
     {
         name: "Tutorial",
-        map: ["a@ 12a", "a 13a", "a 13a", "a 13a", "a 13a", "a 13a", "a15"],
+        map: ["^@ 12^", `" 13"`, `" 13"`, `" 13"`, `" 13"`, `" 13"`, "[=13]"],
         mainWeaponAmmo: 0,
         sideWeaponAmmo: 0,
         position: [710, 280],
@@ -34,9 +34,20 @@ export const levels: Array<Level> = [
     },
     {
         name: "San Miguel",
-        map: ["@ 8r", "a10", " 9a", " 9a", " 9a", " 9a5"],
-        mainWeaponAmmo: 120,
-        sideWeaponAmmo: 60,
+        map: [
+            ` @      r`,
+            `^     {===>   ^`,
+            `"    {)       "`,
+            `"   {+)       "`,
+            `[===LL]       "`,
+            `        <=====]`,
+            `^r           r^`,
+            `"             "`,
+            `"             "`,
+            `[=============]`,
+        ],
+        mainWeaponAmmo: 30,
+        sideWeaponAmmo: 17,
         position: [680, 340],
         background: [0, 1],
         completed: false,
@@ -46,9 +57,29 @@ export const levels: Array<Level> = [
     },
     {
         name: "La Unión",
-        map: ["@ 8r", "a10"],
-        mainWeaponAmmo: 120,
-        sideWeaponAmmo: 60,
+        map: [
+            `{==>`,
+            `"@`,
+            `"`,
+            `"`,
+            `[==>`,
+            `     --`,
+            `        --`,
+            `           -`,
+            `              ^    r     ^`,
+            `             -"          "`,
+            `            ^ "-------   "`,
+            `          {=L=]          "`,
+            `          "              "`,
+            `          "       r      "`,
+            `          "   -----------"`,
+            `          "             h"`,
+            `          "              "`,
+            `          "              "`,
+            `          ----------------`,
+        ],
+        mainWeaponAmmo: 50,
+        sideWeaponAmmo: 17,
         position: [810, 380],
         background: [1, 1],
         completed: false,
@@ -58,8 +89,18 @@ export const levels: Array<Level> = [
     },
     {
         name: "Usulután",
-        map: ["@ 8r", "a10"],
-        mainWeaponAmmo: 120,
+        map: [
+            `h       ^r`,
+            `        "`,
+            `---^-------------`,
+            `   "`,
+            `   "     ,c       ^`,
+            `@  v     <===>   {)`,
+            `                {+)`,
+            `               {++)`,
+            `-------------------`,
+        ],
+        mainWeaponAmmo: 50,
         sideWeaponAmmo: 60,
         position: [600, 410],
         background: [1, 1],
@@ -70,7 +111,24 @@ export const levels: Array<Level> = [
     },
     {
         name: "Zacatecoluca",
-        map: ["@ 8r", "a10"],
+        map: [
+            `      h`,
+            `      --`,
+            `         --`,
+            `^  c              `,
+            `"   .       ^     `,
+            `-----       v_    `,
+            `          ^       `,
+            `          "     -^`,
+            ` @      ^ " ^    "`,
+            ` <======L=L=L====]`,
+            ``,
+            ``,
+            ``,
+            ``,
+            ``,
+            ``,
+        ],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [500, 370],
@@ -82,7 +140,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Cojutepeque",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [480, 300],
@@ -94,7 +152,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Llobasco",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [500, 260],
@@ -106,7 +164,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Santa Ana",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [320, 220],
@@ -118,7 +176,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Chalchuapa",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [270, 230],
@@ -130,7 +188,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Sonsonate",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [250, 310],
@@ -142,7 +200,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Acajutla",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [230, 350],
@@ -154,7 +212,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Izalco",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [290, 290],
@@ -166,7 +224,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "Nueva San Salvador",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [350, 320],
@@ -178,7 +236,7 @@ export const levels: Array<Level> = [
     },
     {
         name: "San Salvador",
-        map: ["@ 8r", "a10"],
+        map: ["@ 10r", "<=10>"],
         mainWeaponAmmo: 120,
         sideWeaponAmmo: 60,
         position: [390, 300],
@@ -200,6 +258,7 @@ export const createLevel = () => {
     Game.shotsFired = 0
     Game.tutorialStep = 0
     Game.hits = 0
+    Game.frameRate = 60
 
     levels[Game.level].timeStarted = Date.now()
 
@@ -207,7 +266,7 @@ export const createLevel = () => {
 
     for (let i = 0; i < level.map.length; i++) {
         const row = level.map[i]
-        const chunks = row.match(/@|(([a-zA-Z]|\s)[0-9]*)/g)
+        const chunks = row.match(/@|(([^0-9]|\\s)[0-9]*)/g)
         if (!chunks) continue
 
         let x = 0
@@ -217,16 +276,14 @@ export const createLevel = () => {
             const repeat = Number(chunk.slice(1) || 1)
 
             if (blockType == "@") {
-                player = new Player(x * Game.blockSize, i * Game.blockSize)
+                player = new Player(x * 50, i * 50)
             } else if (enemyMap.includes(blockType)) {
                 for (let q = 0; q < repeat; q++) {
-                    Game.entities.push(
-                        new Enemy(enemyMap[enemyMap.indexOf(blockType)], (q + x) * Game.blockSize, i * Game.blockSize),
-                    )
+                    Game.entities.push(new Enemy(enemyMap[enemyMap.indexOf(blockType)], (q + x) * 50, i * 50))
                 }
-            } else if (blockType in blockMap) {
+            } else if (blockString.includes(blockType)) {
                 for (let q = 0; q < repeat; q++) {
-                    Game.blocks.push(new Block(blockType, (q + x) * Game.blockSize, i * Game.blockSize))
+                    Game.blocks.push(new Block(blockType as BlockType, (q + x) * 50, i * 50))
                 }
             }
 
@@ -236,3 +293,6 @@ export const createLevel = () => {
 
     Game.entities.push(player!)
 }
+
+// TODO: remove
+createLevel()
