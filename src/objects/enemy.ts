@@ -228,7 +228,7 @@ export class Enemy extends Entity {
         const [gx, gy] = this.gunTip()
         const playerDist = player.dist(gx, gy)
         const [x2, y2] = pointAt(gx, gy, this.weaponRotationTo, playerDist)
-        this.canShootPlayer = this.wp.type == 1 ? false : pointRect(x2, y2, player.x, player.y, player.w, player.h)
+        this.canShootPlayer = this.wp.type == 1 ? false : pointRect(x2, y2, player.x, player.y, player.w, player.h) && playerDist < this.wp.lifetime * this.wp.bulletSpeed
 
         for (const block of Game.blocks) {
             if (block.lineCollision(this.centerX, this.y + 10, player.centerX, player.y + 10).colliding) {
@@ -312,7 +312,7 @@ export class Enemy extends Entity {
             } else {
                 const range = this.wp.lifetime * this.wp.bulletSpeed
 
-                if (!this.canShootPlayer && playerDist < Math.min(range, canvas.width / 3)) {
+                if (!this.canShootPlayer || playerDist > Math.min(range, canvas.width / 3)) {
                     this.movingDir = player.centerX > this.centerX ? 1 : -1
                 } else if (this.canShootPlayer) {
                     if (playerDist < this.wp.barrelX)
