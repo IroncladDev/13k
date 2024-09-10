@@ -7,7 +7,7 @@ import { canvas } from "./canvas/index"
 const Game = {
     gravity: 0.5,
     maxVelocity: 20,
-    level: 4,
+    level: 0,
     entities: [] as Array<Entity>,
     blocks: [] as Array<Block>,
     bullets: [] as Array<Bullet>,
@@ -28,7 +28,7 @@ const Game = {
     // 4 = Mission Failure
     // 5 = Win screen
     // 6 = Intro/cutscene
-    scene: 2,
+    scene: 0,
 
     // Controls
     keys: new Map<string, boolean>(),
