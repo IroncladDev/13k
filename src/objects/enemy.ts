@@ -25,7 +25,7 @@ const lastNames = [
     "Pérez",
 ]
 
-export const enemyMap = "rhcpCRlt"
+export const enemyMap = "rhcCpRlt"
 
 export class Enemy extends Entity {
     type: number
@@ -155,52 +155,52 @@ export class Enemy extends Entity {
 
         const player = this.player || (Game.entities.find(e => e instanceof Player) as Player)
 
+        if (player && !this.player) this.player = player
+
         if (this.hasSurrendered || this.dead) {
-            if (dist(this.centerX, this.centerY, player.centerX, player.centerY) < 15 && !this.weaponTaken) {
+            if (dist(this.centerX, this.centerY, player.centerX, player.centerY) < 35 && !this.weaponTaken) {
                 if (player.arsenal[2][0] != this.weapon) {
                     let text = ""
 
-                    if (this.wp.type == 0 && this.wp.isPistol) text = "[E] take ammo"
-                    else if (player.arsenal[0][0] != this.weapon) text = "[E] take weapon"
+                    if (this.wp.type == 0 && this.wp.isPistol) {
+                        if (player.arsenal[1][0] != this.weapon) text = "[E] take weapon"
+                        else text = "[E] take ammo"
+                    } else if (player.arsenal[0][0] != this.weapon) text = "[E] take weapon"
                     else if (player.arsenal[0][0] == this.weapon) text = "[E] take ammo"
 
                     canvas
                         .fillStyle(colors.white)
                         .align("center")
                         .font()
-                        .text(text, this.centerX, this.y - 25)
+                        .text(text, this.centerX, this.y + this.h - 105)
 
                     if (player.arsenal[1][0] != this.weapon && this.wp.type == 0 && this.wp.isPistol) {
-                        canvas.text("[R] take weapon", this.centerX, this.y - 10)
+                        canvas.text("[R] take ammo", this.centerX, this.y + this.h - 90)
                         if (Game.keysPressedDown("r")) {
-                            player.arsenal[1][0] = this.weapon as ShortWeaponKey
-                            player.arsenal[1][1] = (this.wp as GunWeapon).capacity
+                            player.arsenal[1][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 1
-                            this.weaponTaken = true
                         }
                     }
 
                     if (Game.keysPressedDown("e")) {
                         if (this.wp.type == 0 && this.wp.isPistol) {
+                            if (player.arsenal[1][0] != this.weapon) {
+                                player.arsenal[1][0] = this.weapon as ShortWeaponKey
+                            }
                             player.arsenal[1][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 1
-                        } else if (
-                            player.arsenal[0][0] != (this.weapon as LongWeaponKey | MeeleeWeaponKey) ||
-                            player.arsenal[2][0] != (this.weapon as LongWeaponKey | MeeleeWeaponKey)
-                        ) {
-                            if (this.wp.type == 1) {
-                                player.arsenal[2][0] = this.weapon as MeeleeWeaponKey
-                                player.currentWeapon = 2
+                        } else if (this.wp.type == 0) {
+                            if (player.arsenal[0][0] == this.weapon) {
+                                player.arsenal[0][1] += (this.wp as GunWeapon).capacity
                             } else {
                                 player.arsenal[0][0] = this.weapon as LongWeaponKey
                                 player.arsenal[0][1] = (this.wp as GunWeapon).capacity
-                                player.currentWeapon = 0
                             }
-                        } else if (player.arsenal[0][0] == this.weapon) {
-                            player.arsenal[0][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 0
+                        } else {
+                            player.arsenal[2][0] = this.weapon as MeeleeWeaponKey
+                            player.currentWeapon = 2
                         }
-
                         this.weaponTaken = true
                     }
                 }
@@ -228,7 +228,11 @@ export class Enemy extends Entity {
         const [gx, gy] = this.gunTip()
         const playerDist = player.dist(gx, gy)
         const [x2, y2] = pointAt(gx, gy, this.weaponRotationTo, playerDist)
-        this.canShootPlayer = this.wp.type == 1 ? false : pointRect(x2, y2, player.x, player.y, player.w, player.h) && playerDist < this.wp.lifetime * this.wp.bulletSpeed
+        this.canShootPlayer =
+            this.wp.type == 1
+                ? false
+                : pointRect(x2, y2, player.x, player.y, player.w, player.h) &&
+                  playerDist < this.wp.lifetime * this.wp.bulletSpeed
 
         for (const block of Game.blocks) {
             if (block.lineCollision(this.centerX, this.y + 10, player.centerX, player.y + 10).colliding) {
@@ -309,6 +313,9 @@ export class Enemy extends Entity {
                 } else {
                     this.movingDir = 0
                 }
+                if (!this.baseLineToPlayer && this.canJump) {
+                    this.jump()
+                }
             } else {
                 const range = this.wp.lifetime * this.wp.bulletSpeed
 
@@ -320,13 +327,9 @@ export class Enemy extends Entity {
                     else this.movingDir = 0
                 }
 
-                if (!this.baseLineToPlayer && this.canJump) {
-                    this.movingDir = 0
+                if (!this.baseLineToPlayer && !this.canSeePlayer && this.canJump) {
+                    this.jump()
                 }
-            }
-
-            if (!this.baseLineToPlayer && this.canJump) {
-                this.jump()
             }
         }
     }
@@ -398,13 +401,25 @@ export class Enemy extends Entity {
         this.wp.render(this.fireFrame, this.skinColor, this.weaponTaken ? colors.transparent : colors.black)
         canvas.pop().pop()
 
-        if (this.hasSurrendered) {
+        if (
+            this.weaponTaken
+                ? this.hasSurrendered
+                : this.hasSurrendered &&
+                  this.player &&
+                  dist(this.centerX, this.centerY, this.player.centerX, this.player.centerY) > 35
+        ) {
             canvas
+                .fillStyle(colors.white)
+                .roundRect(this.centerX - 11, this.y - 51, 7, 42, 5)
+                .roundRect(this.centerX - 13.5, this.y - 56, 12, 12, 5)
+                .path()
+                .moveTo(this.centerX - 10, this.y - 50)
+                .lineTo(this.centerX - 10, this.y - 20)
+                .lineTo(this.centerX + 25, this.y - 35)
+                .close(2)
                 .fillStyle(colors.black)
                 .roundRect(this.centerX - 10, this.y - 50, 5, 40, 5)
                 .roundRect(this.centerX - 12.5, this.y - 55, 10, 10, 5)
-                .fillStyle(colors.white)
-                .roundRect(this.centerX - 5, this.y - 45, 30, 20, [0, 5, 5, 0])
         }
     }
 }

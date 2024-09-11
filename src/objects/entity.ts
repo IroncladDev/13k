@@ -222,7 +222,7 @@ export abstract class Entity {
             if (
                 closestEnemy &&
                 Math.abs(x - closestEnemy.centerX) < canvas.width / 2 &&
-                Math.abs(this.centerY - closestEnemy.centerY) < canvas.height / 2
+                Math.abs(this.centerY - closestEnemy.centerY) < 100
             ) {
                 closestEnemy.dir = x < closestEnemy.centerX ? -1 : 1
             }
@@ -230,7 +230,7 @@ export abstract class Entity {
     }
 
     jump() {
-        this.yVel = -(this.jumpForce - (this.wp.type == 1 ? 0 : this.wp.weight))
+        this.yVel = -this.jumpForce
         this.canJump = false
     }
 

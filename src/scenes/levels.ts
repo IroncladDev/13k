@@ -100,6 +100,7 @@ export const levelsScene = () => {
             .text(level.name, level.position[0], level.position[1] - 23 + (i == 12 ? 35 : 0))
             .fillStyle(colors.white)
             .text(level.name, level.position[0], level.position[1] - 25 + (i == 12 ? 35 : 0))
+            .font()
 
         if (level.stars > 0)
             canvas.text(`⭐`.repeat(level.stars), level.position[0], level.position[1] - 37.5 + (i == 12 ? 60 : 0))
@@ -122,7 +123,6 @@ export const levelsScene = () => {
     if (currentLevel < levels.length - 1) {
         canvas
             .fillStyle(colors.white)
-            .align("center")
             .text(`- [E] Take on ${levels[currentLevel].name} -`, canvas.width / 2, canvas.height - 50)
 
         if (pointRect(Game.mouseX, Game.mouseY, canvas.width / 2 - 125, canvas.height - 57.5, 250, 25)) {
@@ -142,12 +142,15 @@ export const levelsScene = () => {
         }
     }
 
-    if (currentLevel == 1 && !levels[0].completed) {
-        canvas.text(`- [R] Start tutorial -`, canvas.width / 2, canvas.height - 25).fillStyle(colors.dwhite(0.2))
+    if (currentLevel == 1) {
+        canvas
+            .fillStyle(colors.white)
+            .text(`- [R] Start tutorial -`, canvas.width / 2, canvas.height - 75)
+            .fillStyle(colors.dwhite(0.2))
 
-        if (pointRect(Game.mouseX, Game.mouseY, canvas.width / 2 - 125, canvas.height - 32.5, 250, 25)) {
+        if (pointRect(Game.mouseX, Game.mouseY, canvas.width / 2 - 125, canvas.height - 82.5, 250, 25)) {
             c2d.style.cursor = "pointer"
-            canvas.fillStyle(colors.dwhite(0.2)).roundRect(canvas.width / 2 - 125, canvas.height - 32.5, 250, 25, 10)
+            canvas.fillStyle(colors.dwhite(0.2)).roundRect(canvas.width / 2 - 125, canvas.height - 82.5, 250, 25, 10)
             if (Game.clicked) {
                 Game.level = 0
                 createLevel()

@@ -40,7 +40,7 @@ export const missionSuccessScene = () => {
     canvas.fillStyle(colors.dwhite(0.2))
 
     const updateStars = () => {
-        const starCount = [allPrisoners, underTwoMins, accuracy >= 0.8].filter(b => b).length
+        const starCount = [allPrisoners, underTwoMins, Math.round(accuracy) >= 0.8].filter(b => b).length
         if (starCount > levels[Game.level].stars) {
             levels[Game.level].stars = starCount
         }

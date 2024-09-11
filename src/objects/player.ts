@@ -16,6 +16,7 @@ import {
 import { Enemy } from "./enemy"
 import { levels } from "@/lib/levels"
 import { colors } from "@/lib/constants"
+import { isToken } from "node_modules/typescript/lib/typescript"
 
 export class Player extends Entity {
     hasFired = false
@@ -46,7 +47,7 @@ export class Player extends Entity {
     }
 
     run() {
-        const isTutorial = Game.level == 0 && Game.tutorialStep <= 7
+        const isTutorial = Game.level == 0 && Game.tutorialStep <= 8
 
         // Dead & Dying states
         if (this.health.some(h => h <= 0)) {
@@ -69,7 +70,7 @@ export class Player extends Entity {
 
         if (this.dashTime > 0) this.dashTime--
 
-        if (this.dashTime == 0 && Game.keysDown("Shift") && this.movingDir != 0 && this.canJump) {
+        if (this.dashTime == 0 && Game.keysDown("Shift") && this.movingDir != 0) {
             if (isTutorial && Game.tutorialStep == 1) {
                 this.arsenal[0][1] = 3
                 Game.tutorialStep = 2
@@ -80,7 +81,16 @@ export class Player extends Entity {
         }
 
         if (Game.keysDown("1")) this.currentWeapon = 0
-        if (Game.keysDown("2")) this.currentWeapon = 1
+        if (Game.keysDown("2")) {
+            this.currentWeapon = 1
+            if (isTutorial && Game.tutorialStep == 4) {
+                this.x = 75
+                Game.bullets = []
+                this.tutorialEnemy = new Enemy("t", 375, 50)
+                Game.entities.push(this.tutorialEnemy)
+                Game.tutorialStep = 5
+            }
+        }
         if (Game.keysDown("3")) this.currentWeapon = 2
 
         if (isTutorial) {
@@ -91,31 +101,23 @@ export class Player extends Entity {
                 Game.tutorialStep = 1
             }
 
-            if (Game.keysDown("1", "2", "3") && Game.tutorialStep == 3) {
-                this.x = 75
-                Game.bullets = []
-                this.tutorialEnemy = new Enemy("t", 375, 50)
-                Game.entities.push(this.tutorialEnemy)
-                Game.tutorialStep = 4
-            }
-
-            if (Game.tutorialStep == 4 && this.tutorialEnemy?.isHovered) {
+            if (Game.tutorialStep == 5 && this.tutorialEnemy?.isHovered) {
                 this.arsenal[0][1] = 25
                 this.currentWeapon = 0
-                Game.tutorialStep = 5
+                Game.tutorialStep = 6
             }
 
-            if (Game.tutorialStep == 5) {
+            if (Game.tutorialStep == 6) {
                 if (this.tutorialEnemy?.hasSurrendered || this.tutorialEnemy?.dead) {
-                    Game.tutorialStep = 6
+                    Game.tutorialStep = 7
                 }
             }
 
-            if (Game.tutorialStep == 6 && this.tutorialEnemy?.weaponTaken) {
-                Game.tutorialStep = 7
+            if (Game.tutorialStep == 7 && this.tutorialEnemy?.weaponTaken) {
+                Game.tutorialStep = 8
             }
 
-            if (Game.tutorialStep == 7 && Game.keysPressedDown("e")) {
+            if (Game.tutorialStep == 8 && Game.keysPressedDown("e")) {
                 Game.scene = 3
             }
         }
@@ -156,12 +158,14 @@ export class Player extends Entity {
 
         // Attacks
         if (Game.pressed && this.fireCooldown == 0 && (this.wp.type == 1 || this.wp.isSemi ? !this.hasFired : true)) {
-            if (Game.mouseButton == 2) this.currentWeapon = 2
+            if (Game.mouseButton == 2) {
+                if (isTutorial && Game.tutorialStep == 3) {
+                    Game.tutorialStep = 4
+                }
+                this.currentWeapon = 2
+            }
             this.weapon = this.arsenal[this.currentWeapon][0]
 
-            if (isTutorial && Game.tutorialStep == 2 && this.arsenal[0][1] == 0) {
-                Game.tutorialStep = 3
-            }
             // Meelee weapons
             if (this.wp.type == 1) {
                 this.fireFrame = 1
@@ -172,6 +176,8 @@ export class Player extends Entity {
                     const strikeX = Math.min(Math.max(x, enemy.x), enemy.x + enemy.w)
                     const strikeY = Math.min(Math.max(y, enemy.y), enemy.y + enemy.h)
                     const strikeDist = dist(x, y, strikeX, strikeY)
+
+                    if (isTutorial && Game.tutorialStep < 6) continue
 
                     if (strikeDist < this.wp.range) {
                         const dirFromPlayer = enemy.x < this.x ? 1 : -1
@@ -201,6 +207,10 @@ export class Player extends Entity {
                 } else if (!this.hasFired) {
                     zzfx(...sfx[3])
                 }
+            }
+
+            if (isTutorial && Game.tutorialStep == 2 && this.arsenal[0][1] == 0) {
+                Game.tutorialStep = 3
             }
 
             this.hasFired = true
@@ -409,6 +419,8 @@ export class Player extends Entity {
             .text("[3]", 245, 20)
             .text("" + this.arsenal[0][1], 95, 65)
             .text("" + this.arsenal[1][1], 205, 65)
+            .font(8)
+            .text("/ right-click", 290, 20)
 
         // Health indicator
         canvas
@@ -474,37 +486,49 @@ export class Player extends Entity {
 
         if (Game.level == 0) {
             let tutorialMessage =
-                "Gang members taken alive have a higher bounty than enemies who are killed. [E] to complete tutorial"
+                "Try to take all gang members alive, shoot accurately, and complete each mission quickly. Good luck, soldier!"
+            let instruction = "Press [E]"
 
             if (Game.tutorialStep == 0) {
                 tutorialMessage = "WASD / Arrow Keys to move"
+                instruction = "Move around"
             } else if (Game.tutorialStep == 1) {
-                tutorialMessage = "While moving, [Shift] to dash. No dashing in the air"
+                tutorialMessage = "While moving, press [Shift] to dash"
+                instruction = "Hold [A/D] & [Shift]"
             } else if (Game.tutorialStep == 2) {
-                tutorialMessage =
-                    "Mouse to aim, Click / Hold mouse to attack. Right click to quickly switch to and attack with meelee weapon"
+                tutorialMessage = "Mouse to aim, Click / Hold mouse to attack"
+                instruction = `Fire (${3 - this.arsenal[0][1]}/3) shots`
             } else if (Game.tutorialStep == 3) {
-                tutorialMessage =
-                    "[1][2][3] to switch between your long, side, and meelee weapon. Side weapons and meelee weapons are lighter but are less powerful"
+                tutorialMessage = "Right click to quickly switch to and attack with your meelee weapon"
+                instruction = "Right-click with your mouse"
             } else if (Game.tutorialStep == 4) {
-                tutorialMessage = "Hover over enemies to see their stats, rank, weapon, and bounty"
+                tutorialMessage = "Use 1, 2, and 3 to switch between your long, side, and meelee weapon"
+                instruction = "Switch to the pistol with [2]"
             } else if (Game.tutorialStep == 5) {
+                tutorialMessage = "Hover over enemies to see their stats, rank, weapon, and bounty"
+                instruction = "Move your mouse over the enemy"
+            } else if (Game.tutorialStep == 6) {
                 tutorialMessage =
                     "Attack gang members until they surrender or are killed. Headshots are ideal for quickly taking down dangerous enemies"
-            } else if (Game.tutorialStep == 6) {
+                instruction = "Shoot the enemy"
+            } else if (Game.tutorialStep == 7) {
                 tutorialMessage = "Walk to the defeated gangster and press [E] to take his weapon and/or ammo"
+                instruction = "Take the gangster's ammo with [E]"
             }
 
             canvas
                 .fillStyle(colors.ui())
-                .roundRect(canvas.width - 310, canvas.height - 90, 300, 80, 10)
+                .roundRect(canvas.width - 310, canvas.height - 110, 300, 100, 10)
                 .fillStyle(colors.white)
-                .font()
-                .align("left")
-                .text("Tutorial (" + (Game.tutorialStep + 1) + "/8)", canvas.width - 300, canvas.height - 80)
                 .font(10)
+                .align("right")
+                .text(instruction, canvas.width - 20, canvas.height - 30, 280)
+                .font(15, true)
+                .align("left")
+                .text("Tutorial (" + (Game.tutorialStep + 1) + "/9)", canvas.width - 300, canvas.height - 100)
+                .font()
                 .fillStyle(colors.dwhite(0.7))
-                .text(tutorialMessage, canvas.width - 300, canvas.height - 65, 280)
+                .text(tutorialMessage, canvas.width - 300, canvas.height - 80, 280)
         } else {
             const threatCount = Game.entities.filter(e => e instanceof Enemy && !e.dead && !e.hasSurrendered).length
             canvas

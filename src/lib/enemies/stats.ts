@@ -51,7 +51,7 @@ export const enemies: Array<EnemyStats> = [
         name: "Coordinator",
         description: "Organizes programs and enforces rules within the gang",
         weapon: [8, 9],
-        speed: 5,
+        speed: 6,
         health: [10, 25, 20],
     },
     {

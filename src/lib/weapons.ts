@@ -439,7 +439,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
     },
     {
         name: "Full-auto Glock",
-        reload: 4,
+        reload: 5,
         recoilX: 0,
         recoilY: 4,
         lifetime: 12,
@@ -497,7 +497,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
     },
     {
         name: "Uzi",
-        reload: 3,
+        reload: 4,
         recoilX: 1,
         recoilY: 1.5,
         lifetime: 40,
