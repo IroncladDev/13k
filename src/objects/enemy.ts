@@ -179,6 +179,7 @@ export class Enemy extends Entity {
                         if (Game.keysPressedDown("r")) {
                             player.arsenal[1][1] += (this.wp as GunWeapon).capacity
                             player.currentWeapon = 1
+                            this.weaponTaken = true
                         }
                     }
 
@@ -249,14 +250,17 @@ export class Enemy extends Entity {
 
             if (this.wp.type == 1) continue
 
-            if (block.lineCollision(gx, gy, x2, y2).colliding) {
+            if (
+                block.lineCollision(gx, gy, x2, y2).colliding ||
+                block.lineCollision(this.centerX, this.centerY, gx, gy).colliding
+            ) {
                 this.canShootPlayer = false
             }
         }
 
         // 4x slower fire rate cooldown for semiauto weapons
         if (this.fireCooldown > 0) {
-            this.fireCooldown -= this.wp.type == 1 ? 0.5 : this.wp.isSemi ? 0.25 : 1
+            this.fireCooldown -= this.wp.type == 1 ? 0.5 : this.wp.isSemi ? 0.5 : 1
         }
 
         // If the enemy can see the player

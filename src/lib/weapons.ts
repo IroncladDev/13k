@@ -19,7 +19,10 @@ export type GunWeapon = {
     frameDelay: number
     isPistol?: boolean
     sound?: number
-    shell?: { color: [number, number, number]; x: number; y: number; width: number; height: number; delay?: number }
+    // x, y, width, height, color, delay?
+    shell?:
+        | [number, number, number, number, [number, number, number]]
+        | [number, number, number, number, [number, number, number], number]
     capacity: number
     offset: [number, number]
 
@@ -44,8 +47,8 @@ export type MeeleeWeapon = {
 }
 
 export type LongWeaponKey = 0 | 1 | 2 | 3 | 4
-export type ShortWeaponKey = 5 | 6 | 7
-export type MeeleeWeaponKey = 8 | 9 | 10
+export type ShortWeaponKey = 4 | 5 | 6
+export type MeeleeWeaponKey = 7 | 8 | 9
 /**
  * Weapons
  * Format is in index = weapon format
@@ -53,13 +56,12 @@ export type MeeleeWeaponKey = 8 | 9 | 10
  * 1 = AK-47
  * 2 = M24 SWS
  * 3 = Spas-12
- * 4 = Dragunov
- * 5 = Glock 19
- * 6 = Full auto Glock
- * 7 = Uzi
- * 8 = machete
- * 9 = Baton
- * 10 = Karambit
+ * 4 = Glock 19
+ * 5 = Full auto Glock
+ * 6 = Uzi
+ * 7 = machete
+ * 8 = Baton
+ * 9 = Karambit
  */
 export type WeaponKey = LongWeaponKey | ShortWeaponKey | MeeleeWeaponKey
 
@@ -71,20 +73,14 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         recoilY: 3,
         lifetime: 60,
         damage: 2,
-        bulletSpeed: 75,
+        bulletSpeed: 60,
         barrelX: 80,
         barrelY: -4,
         weight: 2,
         sound: 1,
         frameDelay: 1,
         type: 0,
-        shell: {
-            color: [186, 170, 104],
-            x: 40,
-            y: 0,
-            width: 10,
-            height: 3,
-        },
+        shell: [50, 0, 10, 3, [186, 170, 104]],
         capacity: 25,
         offset: [0, 0],
 
@@ -125,20 +121,14 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         recoilY: 4,
         lifetime: 30,
         damage: 2.5,
-        bulletSpeed: 60,
+        bulletSpeed: 55,
         barrelX: 80,
         barrelY: -5,
         weight: 2.5,
         sound: 1,
         frameDelay: 1,
         type: 0,
-        shell: {
-            color: [186, 170, 104],
-            x: 50,
-            y: -2,
-            width: 10,
-            height: 3,
-        },
+        shell: [50, -2, 10, 3, [186, 170, 104]],
         capacity: 30,
         offset: [-5, -2.5],
 
@@ -184,12 +174,12 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
     },
     {
         name: "M24 SWS",
-        reload: 65,
+        reload: 50,
         recoilX: 5,
         recoilY: 15,
         lifetime: 100,
         damage: 15,
-        bulletSpeed: 85,
+        bulletSpeed: 70,
         barrelX: 100,
         barrelY: -10,
         weight: 2.5,
@@ -197,14 +187,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         frameDelay: 15,
         sound: 2,
         type: 0,
-        shell: {
-            color: [186, 170, 104],
-            x: 45,
-            y: -2,
-            width: 15,
-            height: 4,
-            delay: 300,
-        },
+        shell: [45, -2, 15, 4, [186, 170, 104]],
         capacity: 5,
         offset: [-10, 0],
 
@@ -267,14 +250,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         frameDelay: 15,
         sound: 2,
         type: 0,
-        shell: {
-            color: [145, 46, 33],
-            x: 45,
-            y: 0,
-            width: 12,
-            height: 5,
-            delay: 200,
-        },
+        shell: [45, 0, 12, 5, [145, 46, 33], 200],
         capacity: 8,
         offset: [-7.5, 0],
 
@@ -317,72 +293,8 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         },
     },
     {
-        name: "Dragunov",
-        reload: 20,
-        recoilX: 10,
-        recoilY: 15,
-        lifetime: 50,
-        damage: 10,
-        bulletSpeed: 70,
-        barrelX: 80,
-        barrelY: -5,
-        weight: 3.5,
-        isSemi: true,
-        sound: 2,
-        frameDelay: 1,
-        type: 0,
-        shell: {
-            color: [186, 170, 104],
-            x: 55,
-            y: -5,
-            width: 15,
-            height: 3,
-        },
-        capacity: 10,
-        offset: [-7.5, -2.5],
-
-        render: (_: number, armColor, color) =>
-            canvas
-                // Arm in back
-                .strokeStyle(armColor)
-                .lineWidth(5)
-                .lineCap("round")
-                .push()
-                .scale(2, 1)
-                .path()
-                .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .close(0)
-                .pop()
-                // Gun body
-                .fillStyle(color)
-                .path()
-                .roundRect(5, 7.5, 5, 15, [2, 0, 10, 2])
-                .roundRect(5, 7.5, 40, 5, 2)
-                .roundRect(25, 2.5, 45, 10, 5)
-                .roundRect(25, 7.5, 5, 15, 2)
-                .roundRect(30, 10, 10, 5, 2)
-                .roundRect(40, 5, 60, 5, 2)
-                .roundRect(90, 0, 5, 10, 2)
-                .roundRect(75, 5, 10, 6, 2)
-                .close(1)
-                // Magazine
-                .strokeStyle(color)
-                .lineWidth(12)
-                .lineCap("square")
-                .path()
-                .arc(70, 10, 20, Math.PI / 1.1, Math.PI)
-                .close(0)
-                // Arm in front
-                .strokeStyle(armColor)
-                .lineWidth(5)
-                .lineCap("round")
-                .path()
-                .arc(17.5, 2.5, 15, Math.PI / 4, Math.PI)
-                .close(0),
-    },
-    {
         name: "Glock 19",
-        reload: 5,
+        reload: 10,
         recoilX: 0,
         recoilY: 7,
         lifetime: 50,
@@ -395,13 +307,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         frameDelay: 3,
         type: 0,
         isPistol: true,
-        shell: {
-            color: [186, 170, 104],
-            x: 50,
-            y: -5,
-            width: 7,
-            height: 3,
-        },
+        shell: [50, -5, 7, 3, [186, 170, 104]],
         capacity: 17,
         offset: [2.5, 2.5],
 
@@ -451,13 +357,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         frameDelay: 3,
         type: 0,
         isPistol: true,
-        shell: {
-            color: [186, 170, 104],
-            x: 50,
-            y: -5,
-            width: 7,
-            height: 3,
-        },
+        shell: [50, -5, 7, 3, [186, 170, 104]],
         capacity: 33,
         offset: [5, -7.5],
 
@@ -500,7 +400,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         reload: 4,
         recoilX: 1,
         recoilY: 1.5,
-        lifetime: 40,
+        lifetime: 15,
         damage: 0.75,
         bulletSpeed: 40,
         barrelX: 70,
@@ -509,13 +409,7 @@ export const weapons: Array<GunWeapon | MeeleeWeapon> = [
         frameDelay: 1,
         type: 0,
         isPistol: true,
-        shell: {
-            color: [186, 170, 104],
-            x: 40,
-            y: 0,
-            width: 5,
-            height: 2,
-        },
+        shell: [40, 0, 5, 2, [186, 170, 104]],
         capacity: 50,
         offset: [10, 0],
 

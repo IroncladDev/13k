@@ -3,14 +3,14 @@ import { pointAt } from "@/lib/utils"
 
 type CustomParticleAttributes =
     | {
-          // Smoke
+          // Shell
           type: 0
           r: number
-          color: [number, number, number]
+          c: [number, number, number]
           yVel: number
           dir: -1 | 1
-          width: number
-          height: number
+          w: number
+          h: number
       }
     | {
           // Sparks
@@ -47,8 +47,8 @@ export class Particle {
                 .push()
                 .translate(this.a.x, this.a.y)
                 .rotate(this.a.r)
-                .fillStyle(`rgba(${this.a.color.join(",")},${this.a.lifetime / 25})`)
-                .fillRect(0, 0, this.a.width, this.a.height)
+                .fillStyle(`rgba(${this.a.c.join(",")},${this.a.lifetime / 25})`)
+                .fillRect(0, 0, this.a.w, this.a.h)
                 .pop()
 
             if (this.a.lifetime <= 0) {

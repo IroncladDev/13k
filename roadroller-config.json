@@ -1,20 +1,20 @@
 {
   "allowFreeVars": true,
-  "recipLearningRate": 1910,
-  "modelMaxCount": 4,
-  "modelRecipBaseCount": 94,
+  "recipLearningRate": 2737,
+  "modelMaxCount": 3,
+  "modelRecipBaseCount": 130,
   "sparseSelectors": [
     0,
     1,
     2,
     3,
-    7,
-    11,
+    5,
+    6,
     13,
-    25,
-    46,
-    53,
-    337,
-    450
+    42,
+    156,
+    195,
+    369,
+    402
   ]
 }

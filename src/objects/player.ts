@@ -16,16 +16,15 @@ import {
 import { Enemy } from "./enemy"
 import { levels } from "@/lib/levels"
 import { colors } from "@/lib/constants"
-import { isToken } from "node_modules/typescript/lib/typescript"
 
 export class Player extends Entity {
     hasFired = false
     health = [20, 40, 30] as [number, number, number]
     maxHealth = [20, 40, 30] as [number, number, number]
     arsenal: [[type: LongWeaponKey, ammo: number], [type: ShortWeaponKey, ammo: number], [type: MeeleeWeaponKey]] = [
-        [0, levels[Game.level].mainWeaponAmmo],
-        [5, levels[Game.level].sideWeaponAmmo],
-        [9],
+        [levels[Game.level].longWeapon || 0, levels[Game.level].mainWeaponAmmo],
+        [levels[Game.level].shortWeapon || 4, levels[Game.level].sideWeaponAmmo],
+        [8],
     ]
     currentWeapon = 0
     weapon: WeaponKey = this.arsenal[this.currentWeapon][0]
@@ -85,7 +84,6 @@ export class Player extends Entity {
             this.currentWeapon = 1
             if (isTutorial && Game.tutorialStep == 4) {
                 this.x = 75
-                Game.bullets = []
                 this.tutorialEnemy = new Enemy("t", 375, 50)
                 Game.entities.push(this.tutorialEnemy)
                 Game.tutorialStep = 5
@@ -94,10 +92,7 @@ export class Player extends Entity {
         if (Game.keysDown("3")) this.currentWeapon = 2
 
         if (isTutorial) {
-            if (
-                Game.keysDown("w", "a", "s", "d", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight") &&
-                Game.tutorialStep == 0
-            ) {
+            if (Game.keysDown("w", "d", "ArrowLeft", "ArrowRight") && Game.tutorialStep == 0) {
                 Game.tutorialStep = 1
             }
 
@@ -107,10 +102,8 @@ export class Player extends Entity {
                 Game.tutorialStep = 6
             }
 
-            if (Game.tutorialStep == 6) {
-                if (this.tutorialEnemy?.hasSurrendered || this.tutorialEnemy?.dead) {
-                    Game.tutorialStep = 7
-                }
+            if ((Game.tutorialStep == 6 && this.tutorialEnemy?.hasSurrendered) || this.tutorialEnemy?.dead) {
+                Game.tutorialStep = 7
             }
 
             if (Game.tutorialStep == 7 && this.tutorialEnemy?.weaponTaken) {
@@ -149,11 +142,11 @@ export class Player extends Entity {
             zzfx(...sfx[10])
         })
 
-        if (this.timeSinceDamaged < 150) this.timeSinceDamaged++
         if (this.fireCooldown > 0) this.fireCooldown--
-        if (this.timeSinceDamaged >= 150)
+        if (this.timeSinceDamaged < 150) this.timeSinceDamaged++
+        else
             this.health.forEach((h, i) => {
-                if (h < this.maxHealth[i]) this.health[i] += (1 - h / this.maxHealth[i]) * 0.1
+                this.health[i] += (1 - h / this.maxHealth[i]) * 0.1
             })
 
         // Attacks
@@ -224,11 +217,7 @@ export class Player extends Entity {
     render() {
         const speedWeightRatio = this.wp.type || (this.speed - this.wp.weight) / this.speed
 
-        if (Math.floor(Math.cos((Game.frameCount / 2.5) * speedWeightRatio)) == 0 && this.movingDir != 0) {
-            this.footstep[1] = true
-        } else {
-            this.footstep[1] = false
-        }
+        this.footstep[1] = Math.floor(Math.cos((Game.frameCount / 2.5) * speedWeightRatio)) == 0 && this.movingDir != 0
 
         if (this.footstep[1] && !this.footstep[0] && this.canJump) {
             zzfx(...sfx[Math.random() > 0.5 ? 5 : 6])
@@ -407,13 +396,12 @@ export class Player extends Entity {
         meeleeWeapon.render(0, colors.transparent, colors.black)
 
         canvas
-            .font()
             .pop()
+            .font(10)
             .fillStyle(colors.white)
             .text(longWeapon.name, 60, 40)
             .text(sideWeapon.name, 170, 40)
             .text(meeleeWeapon.name, 280, 40)
-            .font(10)
             .text("[1]", 25, 20)
             .text("[2]", 135, 20)
             .text("[3]", 245, 20)
@@ -492,26 +480,33 @@ export class Player extends Entity {
             if (Game.tutorialStep == 0) {
                 tutorialMessage = "WASD / Arrow Keys to move"
                 instruction = "Move around"
-            } else if (Game.tutorialStep == 1) {
+            }
+            if (Game.tutorialStep == 1) {
                 tutorialMessage = "While moving, press [Shift] to dash"
-                instruction = "Hold [A/D] & [Shift]"
-            } else if (Game.tutorialStep == 2) {
+                instruction = "Hold [D] & [Shift]"
+            }
+            if (Game.tutorialStep == 2) {
                 tutorialMessage = "Mouse to aim, Click / Hold mouse to attack"
                 instruction = `Fire (${3 - this.arsenal[0][1]}/3) shots`
-            } else if (Game.tutorialStep == 3) {
+            }
+            if (Game.tutorialStep == 3) {
                 tutorialMessage = "Right click to quickly switch to and attack with your meelee weapon"
-                instruction = "Right-click with your mouse"
-            } else if (Game.tutorialStep == 4) {
+                instruction = "Right-click your mouse"
+            }
+            if (Game.tutorialStep == 4) {
                 tutorialMessage = "Use 1, 2, and 3 to switch between your long, side, and meelee weapon"
                 instruction = "Switch to the pistol with [2]"
-            } else if (Game.tutorialStep == 5) {
+            }
+            if (Game.tutorialStep == 5) {
                 tutorialMessage = "Hover over enemies to see their stats, rank, weapon, and bounty"
                 instruction = "Move your mouse over the enemy"
-            } else if (Game.tutorialStep == 6) {
+            }
+            if (Game.tutorialStep == 6) {
                 tutorialMessage =
                     "Attack gang members until they surrender or are killed. Headshots are ideal for quickly taking down dangerous enemies"
                 instruction = "Shoot the enemy"
-            } else if (Game.tutorialStep == 7) {
+            }
+            if (Game.tutorialStep == 7) {
                 tutorialMessage = "Walk to the defeated gangster and press [E] to take his weapon and/or ammo"
                 instruction = "Take the gangster's ammo with [E]"
             }
@@ -535,7 +530,7 @@ export class Player extends Entity {
                 .fillStyle(colors.white)
                 .align("right")
                 .font(15, true)
-                .text(`Level ${Game.level}: ${levels[Game.level].name}`, canvas.width - 10, canvas.height - 50)
+                .text(`Level ${Game.level + 1}: ${levels[Game.level].name}`, canvas.width - 10, canvas.height - 50)
                 .font()
                 .text(
                     threatCount + " Active Threat" + (threatCount == 1 ? "" : "s"),

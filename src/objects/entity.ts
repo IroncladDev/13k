@@ -68,16 +68,20 @@ export abstract class Entity {
         )
 
         if (this.wp.shell) {
+            const [px, py, w, h, c, d] = this.wp.shell
+
             const ejectShell = () => {
                 if (this.wp.type == 1 || !this.wp.shell) return
 
-                const [sx, sy] = pointAt(this.centerX, this.centerY + this.wp.shell.y, r, this.wp.shell.x)
+                const [sx, sy] = pointAt(this.centerX, this.centerY + py, r, px)
                 Game.particles.push(
                     new Particle({
                         type: 0,
-                        ...this.wp.shell,
                         x: sx,
                         y: sy,
+                        w,
+                        h,
+                        c,
                         r,
                         yVel: Math.random() * 5 - 15,
                         dir: this.dir,
@@ -86,8 +90,7 @@ export abstract class Entity {
                 )
             }
 
-            if (this.wp.shell.delay) setTimeout(ejectShell, this.wp.shell.delay)
-            else ejectShell()
+            setTimeout(ejectShell, d || 0)
         }
 
         if (this.movingDir != 0) this.xVel += Math.cos(r) * -this.wp.recoilX
@@ -97,15 +100,8 @@ export abstract class Entity {
     }
 
     moveX() {
-        if (this.movingDir == 1) {
-            this.xVel += 0.5
-            this.rotateTo += this.rotateTo.tween(Math.PI / 32, 5)
-        } else if (this.movingDir == -1) {
-            this.xVel -= 0.5
-            this.rotateTo += this.rotateTo.tween(-Math.PI / 32, 5)
-        } else {
-            this.rotateTo += this.rotateTo.tween(0, 5)
-        }
+        this.xVel += this.movingDir * 0.5
+        this.rotateTo += this.rotateTo.tween((Math.PI / 32) * this.movingDir, 5)
 
         const speedCap = (this.speed - (this.wp.type == 1 ? 0 : this.wp.weight)) / (this.movingDir != this.dir ? 2 : 1)
 
@@ -118,10 +114,7 @@ export abstract class Entity {
     moveY() {
         if (this.y > levels[Game.level].map.length * 50 + 500) this.dead = true
 
-        if (this.yVel + Game.gravity < Game.maxVelocity) {
-            this.yVel += Game.gravity
-        }
-
+        this.yVel += Game.gravity
         this.yVel = Math.min(Math.max(this.yVel, -this.jumpForce), Game.maxVelocity)
         this.y += this.yVel
     }
@@ -222,7 +215,7 @@ export abstract class Entity {
             if (
                 closestEnemy &&
                 Math.abs(x - closestEnemy.centerX) < canvas.width / 2 &&
-                Math.abs(this.centerY - closestEnemy.centerY) < 100
+                ("hasFired" in this ? true : Math.abs(this.centerY - closestEnemy.centerY) < 100)
             ) {
                 closestEnemy.dir = x < closestEnemy.centerX ? -1 : 1
             }

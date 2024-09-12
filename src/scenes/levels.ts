@@ -97,13 +97,13 @@ export const levelsScene = () => {
             .align("center")
             .font(10)
             .fillStyle(colors.black)
-            .text(level.name, level.position[0], level.position[1] - 23 + (i == 12 ? 35 : 0))
+            .text(level.name, level.position[0], level.position[1] - 23 + (i == 11 ? 35 : 0))
             .fillStyle(colors.white)
-            .text(level.name, level.position[0], level.position[1] - 25 + (i == 12 ? 35 : 0))
+            .text(level.name, level.position[0], level.position[1] - 25 + (i == 11 ? 35 : 0))
             .font()
 
         if (level.stars > 0)
-            canvas.text(`⭐`.repeat(level.stars), level.position[0], level.position[1] - 37.5 + (i == 12 ? 60 : 0))
+            canvas.text(`⭐`.repeat(level.stars), level.position[0], level.position[1] - 37.5 + (i == 11 ? 60 : 0))
 
         if (dist(Game.mouseX, Game.mouseY, ...level.position) < 10) {
             if (currentLevel < i) {

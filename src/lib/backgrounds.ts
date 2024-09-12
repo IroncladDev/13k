@@ -1,6 +1,5 @@
 import { canvas as mainCanvas, CanvasEngine } from "./canvas/index"
 import { colors } from "./constants"
-import Game from "./game"
 
 export const backgrounds = [
     document.createElement("canvas"),

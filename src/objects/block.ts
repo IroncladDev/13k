@@ -8,12 +8,9 @@ import { sfx } from "@/lib/sfx"
 import { Particle } from "./particle"
 
 export type BlockType =
-    | "=" // Top-bottom wall
     | "_" // Bottom platform
     | "-" // Top platform
     | '"' // Left-right wall
-    | "'" // Left platform
-    | "|" // Right platform
     | "o" // Full-sided block
     | "." // Sniper shield left
     | "," // Sniper shield right
@@ -50,8 +47,8 @@ export class Block {
         if (this.type == ",") this.hitbox = [0, 25, 10, 25]
         if (this.type == "-" || this.type == "T") this.hitbox = [0, 0, 50, 10]
         if (this.type == "_" || this.type == "L") this.hitbox = [0, 40, 50, 10]
-        if (this.type == "'" || this.type == "(") this.hitbox = [0, 0, 10, 50]
-        if (this.type == "|" || this.type == ")") this.hitbox = [40, 0, 10, 50]
+        if (this.type == "(") this.hitbox = [0, 0, 10, 50]
+        if (this.type == ")") this.hitbox = [40, 0, 10, 50]
     }
 
     render() {
@@ -61,11 +58,10 @@ export class Block {
         if (this.type == "T" || this.type == "L" || this.type == "(" || this.type == ")" || this.type == "+") {
             canvas.fillStyle("#112").fillRect(0, 0, 50, 50)
         }
+        canvas.fillStyle("#334")
         if (
             this.type == "." ||
             this.type == "," ||
-            this.type == "'" ||
-            this.type == "|" ||
             this.type == "_" ||
             this.type == "-" ||
             this.type == "(" ||
@@ -73,24 +69,20 @@ export class Block {
             this.type == "T" ||
             this.type == "L"
         ) {
-            canvas.fillStyle("#334").fillRect(x, y, w, h)
+            canvas.fillRect(x, y, w, h)
         } else if (this.type != "+") {
-            canvas.fillStyle("#334").fillRect(0, 0, 50, 50)
-            if (this.type == "<") canvas.fillStyle("#112").fillRect(10, 10, 40, 30)
-            if (this.type == ">") canvas.fillStyle("#112").fillRect(0, 10, 40, 30)
-            if (this.type == "^") canvas.fillStyle("#112").fillRect(10, 10, 30, 40)
-            if (this.type == "v") canvas.fillStyle("#112").fillRect(10, 0, 30, 40)
-            if (this.type == "=") canvas.fillStyle("#112").fillRect(0, 10, 50, 30)
-            if (this.type == '"') canvas.fillStyle("#112").fillRect(10, 0, 30, 50)
-            if (this.type == "o") canvas.fillStyle("#112").fillRect(10, 10, 30, 30)
-            if (this.type == "[") canvas.fillStyle("#112").fillRect(10, 0, 40, 40)
-            if (this.type == "]") canvas.fillStyle("#112").fillRect(0, 0, 40, 40)
-            if (this.type == "{") canvas.fillStyle("#112").fillRect(10, 10, 40, 40)
-            if (this.type == "}") canvas.fillStyle("#112").fillRect(0, 10, 40, 40)
+            canvas.fillRect(0, 0, 50, 50).fillStyle("#112")
+            if (this.type == "<") canvas.fillRect(10, 10, 40, 30)
+            if (this.type == ">") canvas.fillRect(0, 10, 40, 30)
+            if (this.type == "^") canvas.fillRect(10, 10, 30, 40)
+            if (this.type == "v") canvas.fillRect(10, 0, 30, 40)
+            if (this.type == '"') canvas.fillRect(10, 0, 30, 50)
+            if (this.type == "o") canvas.fillRect(10, 10, 30, 30)
+            if (this.type == "[") canvas.fillRect(10, 0, 40, 40)
+            if (this.type == "]") canvas.fillRect(0, 0, 40, 40)
+            if (this.type == "{") canvas.fillRect(10, 10, 40, 40)
+            if (this.type == "}") canvas.fillRect(0, 10, 40, 40)
         }
-
-        canvas.fillStyle("#334")
-
         canvas.pop()
     }
 
@@ -102,7 +94,8 @@ export class Block {
 
                 if (colliding) {
                     bullet.dead = true
-                    return
+                    Game.bullets = Game.bullets.filter(b => b != bullet)
+                    continue
                 }
             }
 
@@ -130,13 +123,13 @@ export class Block {
             if (this.isCollidingWith(entity)) {
                 if (entity.xVel > 0) {
                     entity.x = this.x - entity.w + this.hitbox[0]
-                    entity.xVel = 0
                 }
 
                 if (entity.xVel < 0) {
                     entity.x = this.x + this.hitbox[0] + this.hitbox[2]
-                    entity.xVel = 0
                 }
+
+                entity.xVel = 0
             }
         }
     }
