@@ -55,7 +55,7 @@ export const startScene = () => {
         .translate(5, 20)
     shirts[0](canvas)
     canvas.push().translate(19, 27).scale(-1, 1)
-    weapons[8].render(0, colors.transparent, colors.black)
+    weapons[7].render(0, colors.transparent, colors.black)
     canvas
         .pop()
         .fillStyle(skinColors[3])

@@ -1,5 +1,5 @@
 {
-  description = "JS1K Game Starter";
+  description = "Salvadoran Reclamation: MS-13";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";

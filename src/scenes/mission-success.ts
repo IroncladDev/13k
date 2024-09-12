@@ -8,11 +8,10 @@ import { Enemy } from "@/objects/enemy"
 
 export const missionSuccessScene = () => {
     const level = levels[Game.level]
-    const allPrisoners = (Game.entities.filter(e => e instanceof Enemy) as Enemy[]).every(
-        e => e.hasSurrendered && !e.dead,
-    )
+    const enemies = Game.entities.filter(e => e instanceof Enemy) as Enemy[]
     const underTwoMins = level.timeEnded - levels[Game.level].timeStarted < 120000
     const accuracy = Math.min(Game.shotsFired == 0 ? 1 : Game.hits / Game.shotsFired, 1)
+    const prisonerPercentage = enemies.filter(e => !e.dead).length / enemies.length
 
     canvas
         .drawImage(backgrounds[level.background[0]], 0, 0, canvas.width / canvas.dpr, canvas.height / canvas.dpr)
@@ -20,7 +19,11 @@ export const missionSuccessScene = () => {
         .fillStyle(colors.white)
         .align("left")
         .font(15)
-        .text("All enemies taken alive", canvas.width / 2 - 125, 200)
+        .text(
+            `Over 50% of gang members taken alive (${(prisonerPercentage * 100).toFixed(0)}%)`,
+            canvas.width / 2 - 125,
+            200,
+        )
         .text("Completed in under 2 minutes", canvas.width / 2 - 125, 230)
         .text(`Accuracy (${(accuracy * 100).toFixed(0)}%) over 80%`, canvas.width / 2 - 125, 260)
         .align("center")
@@ -30,7 +33,7 @@ export const missionSuccessScene = () => {
         .font(25, true)
         .text("Mission Accomplished", canvas.width / 2, 100)
         .font(15)
-        .fillStyle(allPrisoners ? colors.white : colors.dwhite(0.2))
+        .fillStyle(prisonerPercentage >= 0.5 ? colors.white : colors.dwhite(0.2))
         .text("⭐", canvas.width / 2 - 140, 200)
         .fillStyle(underTwoMins ? colors.white : colors.dwhite(0.2))
         .text("⭐", canvas.width / 2 - 140, 230)
@@ -40,7 +43,7 @@ export const missionSuccessScene = () => {
     canvas.fillStyle(colors.dwhite(0.2))
 
     const updateStars = () => {
-        const starCount = [allPrisoners, underTwoMins, Math.round(accuracy) >= 0.8].filter(b => b).length
+        const starCount = [prisonerPercentage >= 0.5, underTwoMins, Math.round(accuracy) >= 0.8].filter(b => b).length
         if (starCount > levels[Game.level].stars) {
             levels[Game.level].stars = starCount
         }

@@ -8,7 +8,8 @@ export type CtxParams<T extends keyof CanvasRenderingContext2D> = Parameters<
 
 export class CanvasEngine {
     context: CanvasRenderingContext2D
-    dpr = 4 // window.devicePixelRatio || 1
+    // Device Pixel Ratio. Set to 2 so everything looks cleaner
+    dpr = 2
     canvas: HTMLCanvasElement
 
     constructor(canvas: HTMLCanvasElement, options?: CanvasRenderingContext2DSettings) {
